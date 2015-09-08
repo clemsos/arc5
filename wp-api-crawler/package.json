@@ -1,0 +1,14 @@
+{
+  "name": "arc5-data-client",
+  "version": "0.0.1",
+  "description": "ARCS WP API",
+  "author": "Clément Renaud",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "URIjs": "^1.16.0",
+    "request": "^2.61.0"
+  }
+}
