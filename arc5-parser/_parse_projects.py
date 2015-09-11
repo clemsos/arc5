@@ -3,11 +3,14 @@
 
 import csv
 import os
+import json
 from fuzzywuzzy import fuzz
 
 dossier = "data/csv"
+dest_dir = "data/json"
 
-fichiers = ["2012_projets.csv"]
+fichiers = ["2012_projets.csv", "2013_projets.csv"]
+
 
 total = 0
 subventions = []
@@ -32,13 +35,22 @@ def parse_subventions(fichier) :
                 subvention["year"] = year
                 subvention['montant'] = montant
                 subvention["labo"] = line["Nom du laboratoire"]
+                subvention["univ"] = line["Nom bénéficiaire"]
                 subvention["chercheur"] = line["Nom du chercheur"]
+                subvention["projet"] = line["Titre du projet"]
+                subvention["subventionId"] = line["N° subvention"]
+
                 subventions.append(subvention)
 
 for fichier in fichiers  : 
     parse_subventions(fichier)
+    print "%s subventions in %s"%(len(subventions), fichier)
 
-print "%s subventions in %s"%(len(subventions), fichier)
+print "Total : %s subventions."%(len(subventions))
+
+with open(os.path.join(dest_dir, "subventions.json"), 'w') as outfile:
+    json.dump(subventions, outfile, sort_keys = True, indent = 4 )
+
 
 def new_porteur(nom , tel , mail , etablissement, labo , role):
         porteur = {}
@@ -57,6 +69,7 @@ def find_projet(name):
     #     else : 
     #         r = fuzz.ratio( p["titre"], name)
     #         if r < 90 : return p
+
 
 # parse tableau global des projets 
 fichier_projets = "tableauDeBord.csv"
@@ -117,13 +130,12 @@ print "total : %s projets"%len(projets)
 # print "%s projets, %s postdocs et %s thèses"%(len(projets), len(postdocs), len(theses))
 
 
-
 # parse partenaires
 fichier_partenaires= "partenaires.csv"
 with open( os.path.join(dossier, fichier_partenaires), "r") as f :
     reader = csv.DictReader(f) 
-    for line in reader:
-        print line["Projet"]
-#         print find_projet(line["Projet"])
+    # for line in reader:
+        # print line["Projet"]
+        # print find_projet(line["Projet"])
 
 

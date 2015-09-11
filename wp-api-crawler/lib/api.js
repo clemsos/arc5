@@ -7,12 +7,14 @@ var URI = require('URIjs');
 http://arcs.test/wp-json/posts?type=bdd_these
 
 bdd_projet
+bdd_these
+
 bdd_laboratoire
+bdd_personne
+bdd_partenaire
+
 bdd_etablissement
 bdd_ecole-doctorale
-bdd_partenaire
-bdd_these
-bdd_personne
 
 */
 
@@ -49,7 +51,8 @@ function getSingleItem(id, callback){
     console.log(url);
 
     request(url, function(err, response, body) {
-        callback(err,body);
+        if(err) throw err
+        callback(JSON.parse(body));
     });
 }
 
@@ -71,8 +74,41 @@ function getAllItems(type, callback) {
     })
 }
 
+function searchItem (q, type, callback) {
+    if (typeof  (type) != "string") throw new Error("Word should be a string");
+    if (typeof  (q) != "string") throw new Error("Word should be a string");
+    
+    // URL query
+    var params = {};
+    params.type = "bdd_"+type;
+    params["filter[s]"] = q;
+
+    var urlParsing = URI(arcsURL+"/posts");
+    url = urlParsing.query(params).toString();
+    // console.log(url);
+
+    request(url, function(err, response, body) {
+        if(err) throw err
+        var bdd = JSON.parse(body);
+        // console.log(bdd.length, "results for", q, " in ", type );
+
+        var items = [];
+        if(type == "projet" || type=="these") {
+            bdd.forEach(function  (d) {
+                if( d.meta.bdd_arc.indexOf(ARC_NUMBER) > -1) items.push(d);
+            })
+        } else {
+            items = bdd;
+        }
+
+        callback(items[0]); // return only the 1st result
+
+    });
+
+}
 
 module.exports = {
     getAllItems : getAllItems,
-    getSingleItem : getSingleItem
+    getSingleItem : getSingleItem,
+    searchItem : searchItem
 }
