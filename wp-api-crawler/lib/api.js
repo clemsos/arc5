@@ -1,5 +1,6 @@
 var request = require('request');
 var URI = require('URIjs');
+var logger = require('winston');
 
 /*
 * ARCS API
@@ -33,7 +34,7 @@ var getItems = function (type, callback) {
 
     var urlParsing = URI(arcsURL+"/posts");
     url = urlParsing.query(params).toString();
-    console.log(url);
+    logger.log("debug", url);
 
     request(url, function(err, response, body) {
         callback(err,body);
@@ -48,7 +49,7 @@ function getSingleItem(id, callback){
 
     var urlParsing = URI(arcsURL+"/posts/"+id);
     url = urlParsing.query(params).toString();
-    console.log(url);
+    logger.log("debug", url);
 
     request(url, function(err, response, body) {
         if(err) throw err
@@ -69,7 +70,7 @@ function getAllItems(type, callback) {
             if( d.meta.bdd_arc.indexOf(ARC_NUMBER) > -1) items.push(d);
         })
 
-        console.log( items.length, Math.round(items.length / bdd.length * 100) + "%" );
+        logger.log("debug", items.length, Math.round(items.length / bdd.length * 100) + "%" );
         callback(items);
     })
 }
@@ -85,7 +86,7 @@ function searchItem (q, type, callback) {
 
     var urlParsing = URI(arcsURL+"/posts");
     url = urlParsing.query(params).toString();
-    // console.log(url);
+    logger.log("debug", url);
 
     request(url, function(err, response, body) {
         if(err) throw err
@@ -100,7 +101,7 @@ function searchItem (q, type, callback) {
         } else {
             items = bdd;
         }
-
+        logger.log("debug", "search results count", { "count" : items.length });
         callback(items[0]); // return only the 1st result
 
     });

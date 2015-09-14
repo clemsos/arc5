@@ -1,119 +1,157 @@
-var api = require("./api");
-var moment = require('moment')
+var api = require("./api")
+    , utils = require("./utils")
+    , moment = require('moment')
+    , logger = require('winston');
 
+function parseRelationshipsFields (item, type, fields, callback) {
 
-function parseRelationships (item, type, fields) {
-
+    var edges = [];
     // loop through all relationships fields 
     fields.forEach(function(field){
         var toParse = item.meta[type+"-"+field] || [];
 
         // for each element
-        toParse.forEach(function(target){ 
-
-            getEdge(item.ID, target.ID, field, item.start, item.end);
-
-            // nodesId.push(target.ID);
-            getNode(target.ID);
-
+        toParse.forEach(function(target){
+            if(target) {
+                var edge = getEdge(item, target, field, item.start, item.end);
+                edges.push(edge);
+            }
         });
     })
 
+    callback(edges);
 }
 
-function getEdge (sourceId, targetId, type, start, end) {
+function getEdge (source, target, type, start, end) {
 
-    return {
-            'source' : sourceId, 
-            'target' : targetId, 
-            'type' : type,
-            'start' : moment( start , "YYYYMMDD").toString() ,
-            'end' : moment( end , "YYYYMMDD").toString()
-        };
+    var edge = {
+            'source' : parseNode(source), 
+            'target' : parseNode(target), 
+            'type' : type
+        }
+
+    if(start) edge.start = moment( start , "YYYYMMDD").toString();
+    if(end)  edge.end = moment( end , "YYYYMMDD").toString();
+
+    return edge
 }
 
-function getNode(_id, callback) {
+function getAxe(id) {
 
-    api.getSingleItem(_id, function (item) {
+        var axe1 = {
+                id : 1,
+                name : 'Axe 1 - Cultures au pluriel',
+                slug : 'axe-1-cultures-au-pluriel'
+            };
 
-        if (! item.type) return;
+        var axe2 = {
+                id : 2,
+                name: 'Axe 2 - Cultures numériques',
+                slug: 'axe-2-cultures-numeriques'
+            };
 
-        var node = {};
-        node.id = _id;
-        node.type = item.type.slice(4, item.type.length); // remove bdd_
-        node.title = item.title;
-        node.slug = item.slug;
-        node.bddLink = item.link;
-        node.start = null, 
-        node.end = null;
-        node.acronyme = item.meta.acronyme;
-        node.site = item.meta.site;
+        var axe3 =  {
+                id: 3,
+                name: 'Axe 3 - Sciences et techniques',
+                slug: 'axe-3-sciences-et-techniques'
+            };
+
+        switch (id) {
+            case  9 :  return axe1; 
+            case 10 : return axe2; 
+            case  11: return axe3; 
+            case "1" : return axe1; 
+            case "2" : return axe2; 
+            case "3" : return axe3; 
+        }
+
+        return {}
+}
+
+// get clean type
+function getType(type) {
+    if(type.slice(0, 3) == "bdd") return type.slice(4, type.length); // remove bdd_
+    else return  type
+}
+
+function parseRelationships(item, callback) {
+
+        var type = getType(item.type); 
 
         var relationshipsFields =[];
-
-        switch (node.type) {
+        switch (type) {
 
             case "laboratoire":
-                console.log("-- labo");
+                logger.log("debug", "-- labo");
                 break;
             case "etablissement":
-                console.log("-- etablissement");
+                logger.log("debug", "-- etablissement");
                 relationshipsFields =  ["directeur", "laboratoire", "partenaire"];
                 break;
             case "personne":
-                console.log("-- personne");
+                logger.log("debug", "-- personne");
                 break;
             case "ecole-doctorale" : 
-                console.log('--ecole-doctorale');
+                logger.log("debug", '--ecole-doctorale');
                 break;
             case "partenaire" : 
-                console.log('--partenaire');
+                logger.log("debug", '--partenaire');
                 break;
             case "projet" :
-                console.log('--projet');
-
+                logger.log("debug", '--projet');
                 relationshipsFields = ["nom_des_porteurs", "chercheur", "partenaires", "laboratoire" ,"etablissements_gestionnaires"];
-                node.start =  item.meta["date_debut"];
-                node.end = item.meta["date_fin"];
-
-                // topics
-                node.axe = {};
-                if(item.terms.bdd_thematique_arc5){
-                    node.axe.ID = item.terms.bdd_thematique_arc5[0].ID;
-                    node.axe.name = item.terms.bdd_thematique_arc5[0].name;
-                    node.axe.slug = item.terms.bdd_thematique_arc5[0].slug;
-                }
-
                 break;
             case "these" : 
-                console.log('--these');
-                
-                relationshipsFields = ["bdd_projet", "bdd_laboratoire", "bdd_etablissement", "bdd_ecole-doctorale", "bdd_partenaire", "bdd_these", "bdd_personne"]
-                // date
-                node.start =  item.meta["date_debut"];
-                node.end = item.meta["date_soutenance"];
-                
-                // topics
-                node.axe = {};
-                if(item.terms.bdd_thematique_arc5){
-                    node.axe.ID = item.terms.bdd_thematique_arc5[0].ID;
-                    node.axe.name = item.terms.bdd_thematique_arc5[0].name;
-                    node.axe.slug = item.terms.bdd_thematique_arc5[0].slug;
-                }
+                logger.log("debug", '--these');
+                relationshipsFields = ["doctorant", "laboratoire", "etablissement", "ecole-doctorale", "partenaire", "directeur", "coencadrant"]
                 break;
         } // end switch
 
-        // store the node
-        console.log(node);
+        parseRelationshipsFields(item, type, relationshipsFields, function(edges) {
+            callback(edges);
+        })
+}
 
-        // get all relationship
-        parseRelationships(item, node.type, relationshipsFields);
+function parseNode(item) {
 
-    })
+        var node = {};
+
+        // get type
+        var t = item.type || item.post_type;
+        node.type = getType(t); 
+
+        // parse date, axe 
+        if (node.type == "project" || node.type == "these") {
+
+            // add meta
+            node.name = item.title;
+            node.slug = item.slug;
+            node.bddLink = item.link;
+
+            node.acronyme = item.meta.acronyme || node.name.match(/\b(\w)/g).join('').toUpperCase();
+            node.site = item.meta.site;
+
+            node.start =  moment(item.meta["date_debut"], "YYYYMMDD").toJSON();
+            node.end = moment(item.meta["date_fin"], "YYYYMMDD").toJSON();
+
+            // axe
+            if (item.terms && item.terms.bdd_thematique_arc5) node.axe =  getAxe(item.terms.bdd_thematique_arc5[0].ID);
+            else node.axe =  getAxe(item.axe);
+
+        } else if (node.type = "laboratoire") {
+
+            // add meta
+            node.name = item.post_title || item.title;
+            node.slug = utils.slugify(node.name);
+            node.bddLink = item.guid;
+        }
+
+        return node;
 }
 
 module.exports = {
-    getNode : getNode
+    parseNode : parseNode,
+    parseRelationships : parseRelationships
 }
 
 

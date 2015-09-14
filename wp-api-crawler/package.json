@@ -11,6 +11,8 @@
     "URIjs": "^1.16.0",
     "moment": "^2.10.6",
     "mongodb": "^2.0.42",
-    "request": "^2.61.0"
+    "mongoose": "^4.1.6",
+    "request": "^2.61.0",
+    "winston": "^1.0.1"
   }
 }

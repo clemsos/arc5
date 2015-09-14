@@ -1,6 +1,8 @@
 data
 venv 
 arc5.sublime-*
+models
+tests
 
 # Logs
 logs

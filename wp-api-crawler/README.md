@@ -8,3 +8,37 @@ Les thèses par exemple  permettent de regrouper : labos, doctorants, directeurs
 
 
 
+## Data ARC5:
+
+    # python parse_projects.py
+    52 projets
+    24 etablissements
+    10 ecole-doctorales
+    23 theses
+    104 personnes
+    1 postdocs
+
+    # python parse_partenaires.py 
+    total : 141 partenaires
+
+    # python parse_subventions.py 
+
+    27 subventions in 2012_projets.csv
+    54 subventions in 2013_projets.csv
+    Total : 54 subventions.
+
+## Data WP
+
+
+    # http://arcs.test/wp-json/posts?type=bdd_projet&filter%5Bposts_per_page%5D=1000
+    3 'results in ' 'bdd_projet' with 'arc5'
+
+    # http://arcs.test/wp-json/posts?type=bdd_these&filter%5Bposts_per_page%5D=1000
+    36/131 'results in ' 'bdd_these' with 'arc5'
+
+## Formating diff : 
+
+* projet.json.name: "MARA. Monnaie antique en Rh\u00f4ne-Alpes : du document mon\u00e9taire \u00e0 son exploitation "
+* subvention.projet: "MARA. Monnaie antique en Rhone-Alpes : du document mon\u00e9taire \u00e0 son exploitation"
+* partenaires.postdoc : "Monnaie imp\u00e9riale et corpus numismatique en Rh\u00f4ne-Alpes - MARA (postdoc) "
+* wp.title : "Monnaie antique en Rhône-Alpes : du document monétaire à son exploitation"

@@ -1,47 +1,192 @@
 var api = require("./lib/api")
     , parser = require("./lib/parser")
-    , file = require("./lib/file");
+    , file = require("./lib/file")
+    , utils = require("./lib/utils")
+    , methods = require("./lib/db");
 
+// DB connection
+var client = require('mongodb').MongoClient;
+var dbName = "arc5";
+var url = 'mongodb://localhost:27017/' + dbName;
 
-// parse the project list
-file.readJsonFromFile("data/json/ecoles_doctorales.json", function(items) {
-    var nodes = [];
-    for (var i = 0; i < items.length; i++) {
-        searchAndParseNode(items[i].Nom, "ecole-doctorale" , function(node){
-            nodes.push(node);
-            console.log(nodes.length);
+// LOG file 
+var logger = require('winston');
+logger.add(logger.transports.File, { filename: 'arc5.log', prettyPrint : true });
+// logger.level = 'debug';
+
+// nodes
+var nodesFiles = ["ecole-doctorales" , "etablissements" , "laboratoires" , "personnes" , "postdocs" , "projets" , "theses"];
+var wpIndex = ["bdd_these", "bdd_projet"];
+
+client.connect(url, function(err, db) {
+    if(err) throw err;
+    console.log("Connected to DB");
+
+    // loop through all JSON files
+    for (var i = 0; i < nodesFiles.length; i++) {
+        file.readJsonFromFile("data/json/"+nodesFiles[i]+".json", function(items) {
+            console.log(items.length, " items in ",  items[0].type+"s");
+            saveEdgesAndNodes(items, db)
         })
     }
-});
 
+    for (var i = 0; i < wpIndex.length; i++) {
+        api.getAllItems(wpIndex[i], function(items){
+            saveEdgesAndNodes(items, db);
+        });
+    }
+
+
+    // db.close();
+})
+
+
+function saveEdgesAndNodes (items, db) {
+
+    for (var z = 0; z < items.length; z++) {
+        var item = items[z];
+
+        if(item) {
+            var node = parser.parseNode(item); 
+            // save node
+            methods.insertOrUpdateNode(node, db, function (existingNode) {});
+            // create edges and target nodes
+            parser.parseRelationships(item, function (edges) {
+                for (var j = 0; j < edges.length; j++) {
+                    methods.insertOrUpdateEdge(edges[j], db, function (existingEdge) {
+                    });
+                }
+            })
+        }
+    }
+}
+
+// getAllThesesFromCSV();
+
+    // nodes.forEach(function  (item) {
+    //     saveNode (item.node);
+    //     for (var i = 0; i < item.edges.length; i++) {
+    //         saveEdge (item.edges[i]);
+    //         saveNode (item.edges[i].target);
+    //     };
+    // })
+// });
+
+
+
+function saveEdge (edge) {
+    console.log(edge);
+}
+
+function getAndParseNode(_id, callback){
+    api.getSingleItem(_id, function (item) {
+        if (! item.type) return; 
+        else parser.getNode(item, function (node) {
+            callback(node);
+        });
+    });
+}
 
 function searchAndParseNode (q, type, callback) {
+
     api.searchItem(q, type, function (data) {
-        
         if (data) {
-           parser.getNode(data.ID, function  (node) {
+           parser.getAndParseNode(data.ID, function  (node) {
                callback(node);
            })
+        } else {
+            callback(null)
         }
     })
 }
 
-// api.getAllItems("bdd_projet", function(projects){
-//     for (var i = 0; i < projects.length; i++) {
-//         parser.getNode(projects[i].ID, function  (node) {
+function getAllThesesFromWP (callback) {
+    api.getAllItems("bdd_these", function(items){
+        var nodes = [];
+        for (var i = 0; i < items.length; i++) {
+
+            parser.getNode(items[i], function (node) {
+
+                // if (nodes.length == projects.length) callback(nodes);
+            });
+            // console.log(i);
+
+            // parser.getRelationships(items[i], function (edges) {
+            // //     // for (var j = 0; j < edges.length; i++) {
+            // //     //     var source = getNode(edges[i].source)
+            // //     //     var target = getNode(edges[i].source)
+            // //         // saveEdge(source._id, target._id, edge[i]type);
+            // }
+
+            // })
+        }
+    });
+}
+
+function getAllThesesFromCSV(callback) {
+    file.readJsonFromFile("data/json/theses.json", function(items) {
+        var nodes = [];
+        for (var i = 0; i < items.length; i++) {
+            // parser.getNode(items[i], function (node) {
+            // if (nodes.length == projects.length) callback(nodes);
+            // });
+   
+            // console.log(i);
+            parser.getRelationships(items[i], function (edges) {
+                // console.log(edges);
+            })
+   
+        //     parser.getNode(items[i], function (node) {
+        //         nodes.push(node)
+        //         if (nodes.length == items.length) callback(nodes);
+        //     });
+        }
+    });
+}
+
+// if it exists fetch the available info and parse it into the node
+
+// write the node to DB
+// check if it has relationships with other nodes
+// save relationship as edge
+
+// fetch partners
+// add partner as a node
+// add partner relationship as an edge
+
+// fetch sub
+// add sub provider as a node
+// add sub relationships as an edge with amount
+
+
+
+// getAllThesesFromWP(function(wpResults){
+
+//     getAllThesesFromCSV(function  (csvResults){
+//         console.log(wpResults.length, csvResults.length);
+
+//         // fetch similar posts
+//         var wpNames = wpResults.map(function(d){return d.node.name});
+//         var csvNames = csvResults.map(function(d){return d.node.name});
+//         var similars = utils.matchSimilarItemsInArray(wpNames, csvNames);
+
+//         similars.forEach(function (similar) {
+//             var nodeA = wpResults[similar[0]];
+//             var nodeB = csvResults[similar[1]];
+//             var node = mergeNodesAndEdges(nodeA, nodeB);
 //             console.log(node);
 //         })
-//     };
+
+//     });
 // });
 
-// api.getAllItems("bdd_these", function(projects){
 
-//     var projects_fields  = ["bdd_projet", "bdd_laboratoire", "bdd_etablissement", "bdd_ecole-doctorale", "bdd_partenaire", "bdd_these", "bdd_personne"]
 
-//     for (var i = 0; i < projects.length; i++) {
-//         var project = parser.getCleanItems(projects[i], "projet", projects_fields);
-//     }
-// });
+
+
+
+
+
 
 
 
