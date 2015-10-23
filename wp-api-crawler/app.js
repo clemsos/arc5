@@ -4,57 +4,59 @@ var api = require("./lib/api")
     , utils = require("./lib/utils")
     , methods = require("./lib/db");
 
-// DB connection
-var client = require('mongodb').MongoClient;
-var dbName = "arc5";
-var url = 'mongodb://localhost:27017/' + dbName;
-
 // LOG file 
 var logger = require('winston');
 logger.add(logger.transports.File, { filename: 'arc5.log', prettyPrint : true });
 // logger.level = 'debug';
 
-// nodes
-var nodesFiles = ["ecole-doctorales" , "etablissements" , "laboratoires" , "personnes" , "postdocs" , "projets" , "theses"];
+// indexes to crawl
+var nodesFiles = ["ecole-doctorales" , "etablissements" , "laboratoires" , "personnes" , "postdocs" , "projets" , "theses", "partenaires"];
 var wpIndex = ["bdd_these", "bdd_projet"];
 
-client.connect(url, function(err, db) {
-    if(err) throw err;
-    console.log("Connected to DB");
+// keep track of progresses
+var totalIndexes = nodesFiles.length + wpIndex.length;
 
-    // loop through all JSON files
-    for (var i = 0; i < nodesFiles.length; i++) {
-        file.readJsonFromFile("data/json/"+nodesFiles[i]+".json", function(items) {
-            console.log(items.length, " items in ",  items[0].type+"s");
-            saveEdgesAndNodes(items, db)
-        })
-    }
+// loop through all JSON files
+for (var i = 0; i < nodesFiles.length; i++) {
+    file.readJsonFromFile("data/json/"+nodesFiles[i]+".json", function(items) {
+        console.log(items.length, " items in ",  items[0].type+"s");
+        saveEdgesAndNodes(items)
+    })
+}
 
-    for (var i = 0; i < wpIndex.length; i++) {
-        api.getAllItems(wpIndex[i], function(items){
-            saveEdgesAndNodes(items, db);
-        });
-    }
-
-
-    // db.close();
-})
+// loop through all JSON WP indexes
+for (var i = 0; i < wpIndex.length; i++) {
+    api.getAllItems(wpIndex[i], function(items){
+        saveEdgesAndNodes(items);
+    });
+}
 
 
-function saveEdgesAndNodes (items, db) {
+
+var loops = 0;
+function saveEdgesAndNodes (items, edgesBatch, nodesBatch) {
+
+    // count function calls to keep track of progresses 
+    loops++; 
 
     for (var z = 0; z < items.length; z++) {
         var item = items[z];
 
         if(item) {
-            var node = parser.parseNode(item); 
+
             // save node
-            methods.insertOrUpdateNode(node, db, function (existingNode) {});
+            var node = parser.parseNode(item); 
+            methods.insertOrUpdateNode(node);
+
             // create edges and target nodes
             parser.parseRelationships(item, function (edges) {
                 for (var j = 0; j < edges.length; j++) {
-                    methods.insertOrUpdateEdge(edges[j], db, function (existingEdge) {
-                    });
+                    methods.insertOrUpdateEdge(edges[j]);
+                }
+
+                if(totalIndexes == loops &&  z+1 == items.length) {
+                    console.log("indexing done");
+                    methods.execute()
                 }
             })
         }

@@ -96,6 +96,7 @@ function parseRelationships(item, callback) {
                 break;
             case "partenaire" : 
                 logger.log("debug", '--partenaire');
+                relationshipsFields = ["projet", "porteur", "ville"]
                 break;
             case "projet" :
                 logger.log("debug", '--projet');
@@ -120,14 +121,13 @@ function parseNode(item) {
         var t = item.type || item.post_type;
         node.type = getType(t); 
 
+        node.bddLink = item.link || "";
+
         // parse date, axe 
-        if (node.type == "project" || node.type == "these") {
+        if (node.type == "projet" || node.type == "these" || node.type == "postdoc") {
 
             // add meta
-            node.name = item.title;
-            node.slug = item.slug;
-            node.bddLink = item.link;
-
+            node.name = item.title || node.type + "-" +Math.floor(Math.random()*100000);
             node.acronyme = item.meta.acronyme || node.name.match(/\b(\w)/g).join('').toUpperCase();
             node.site = item.meta.site;
 
@@ -138,14 +138,24 @@ function parseNode(item) {
             if (item.terms && item.terms.bdd_thematique_arc5) node.axe =  getAxe(item.terms.bdd_thematique_arc5[0].ID);
             else node.axe =  getAxe(item.axe);
 
-        } else if (node.type = "laboratoire") {
+        } else if (node.type == "laboratoire") {
 
             // add meta
-            node.name = item.post_title || item.title;
-            node.slug = utils.slugify(node.name);
-            node.bddLink = item.guid;
+            node.name = item.post_title || item.title || "laboratoire"+Math.floor(Math.random()*100000);
+            node.bddLink = item.guid || "";
+
+        } else if (node.type == "personne"|| node.type == "partenaire" || node.type == "ecole-doctorale" || node.type == "etablissement") {
+
+            // generate ID if no name is defined
+            if (!item.title || item.title == "" || item.title == " ")  {
+                node.name = (item.role || item.type) ?  node.type +"-"+Math.floor(Math.random()*100000) : item.post_title;
+            }
+            else node.name = item.title;
+        } else if (node.type == "ville" ){
+            node.name = item.title || "ville"+"-"+Math.floor(Math.random()*100000);
         }
 
+        node.slug = item.slug || utils.slugify(node.name);
         return node;
 }
 
@@ -153,38 +163,3 @@ module.exports = {
     parseNode : parseNode,
     parseRelationships : parseRelationships
 }
-
-
-// function getCleanItem(item, radical, fields) {
-
-//     var clean = {};
-
-//     clean.ID = item.ID;
-//     clean.title = item.title;
-//     clean.slug = item.slug;
-//     clean.bddLink = item.link;
-//     clean.type = radical;
-//     clean.subType = item.meta.type
-
-//     // parse date
-//     var start =  item.meta["date_debut"];
-//     var end = "";
-
-//     if(radical == "these") {
-//         end = item.meta["date_soutenance"];
-//     } else if (radical == "projet") {
-//         end = item.meta["date_fin"];
-//     } 
-
-//     clean.start = start;
-//     clean.end = end;
-
-//     // parse relationships
-//     clean.relationships = parseRelationships(item, radical, fields, start, end);
-
-//     // thematics
-
-
-
-//     return clean
-// }

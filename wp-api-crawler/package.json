@@ -10,8 +10,8 @@
   "dependencies": {
     "URIjs": "^1.16.0",
     "moment": "^2.10.6",
-    "mongodb": "^2.0.42",
-    "mongoose": "^4.1.6",
+    "mongojs": "^1.4.1",
+    "node-uuid": "^1.4.3",
     "request": "^2.61.0",
     "winston": "^1.0.1"
   }
