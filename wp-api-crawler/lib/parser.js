@@ -6,7 +6,7 @@ var api = require("./api")
 function parseRelationshipsFields (item, type, fields, callback) {
 
     var edges = [];
-    // loop through all relationships fields 
+    // loop through all relationships fields
     fields.forEach(function(field){
         var toParse = item.meta[type+"-"+field] || [];
 
@@ -25,8 +25,8 @@ function parseRelationshipsFields (item, type, fields, callback) {
 function getEdge (source, target, type, start, end) {
 
     var edge = {
-            'source' : parseNode(source), 
-            'target' : parseNode(target), 
+            'source' : parseNode(source),
+            'target' : parseNode(target),
             'type' : type
         }
 
@@ -57,12 +57,12 @@ function getAxe(id) {
             };
 
         switch (id) {
-            case  9 :  return axe1; 
-            case 10 : return axe2; 
-            case  11: return axe3; 
-            case "1" : return axe1; 
-            case "2" : return axe2; 
-            case "3" : return axe3; 
+            case  9 :  return axe1;
+            case 10 : return axe2;
+            case  11: return axe3;
+            case "1" : return axe1;
+            case "2" : return axe2;
+            case "3" : return axe3;
         }
 
         return {}
@@ -76,7 +76,7 @@ function getType(type) {
 
 function parseRelationships(item, callback) {
 
-        var type = getType(item.type); 
+        var type = getType(item.type);
 
         var relationshipsFields =[];
         switch (type) {
@@ -91,10 +91,10 @@ function parseRelationships(item, callback) {
             case "personne":
                 logger.log("debug", "-- personne");
                 break;
-            case "ecole-doctorale" : 
+            case "ecole-doctorale" :
                 logger.log("debug", '--ecole-doctorale');
                 break;
-            case "partenaire" : 
+            case "partenaire" :
                 logger.log("debug", '--partenaire');
                 relationshipsFields = ["projet", "porteur", "ville"]
                 break;
@@ -102,7 +102,7 @@ function parseRelationships(item, callback) {
                 logger.log("debug", '--projet');
                 relationshipsFields = ["nom_des_porteurs", "chercheur", "partenaires", "laboratoire" ,"etablissements_gestionnaires"];
                 break;
-            case "these" : 
+            case "these" :
                 logger.log("debug", '--these');
                 relationshipsFields = ["doctorant", "laboratoire", "etablissement", "ecole-doctorale", "partenaire", "directeur", "coencadrant"]
                 break;
@@ -119,11 +119,13 @@ function parseNode(item) {
 
         // get type
         var t = item.type || item.post_type;
-        node.type = getType(t); 
+        node.type = getType(t);
 
         node.bddLink = item.link || "";
 
-        // parse date, axe 
+        if(node.type == "partenaire") console.log(item);
+
+        // parse date, axe
         if (node.type == "projet" || node.type == "these" || node.type == "postdoc") {
 
             // add meta
@@ -147,10 +149,12 @@ function parseNode(item) {
         } else if (node.type == "personne"|| node.type == "partenaire" || node.type == "ecole-doctorale" || node.type == "etablissement") {
 
             // generate ID if no name is defined
-            if (!item.title || item.title == "" || item.title == " ")  {
-                node.name = (item.role || item.type) ?  node.type +"-"+Math.floor(Math.random()*100000) : item.post_title;
+            if (item.title) node.name = item.title;
+            else if (item.name) node.name = item.name;
+            else {
+                node.name = (item.role != undefined || item.type != undefined) ?  node.type +"-"+Math.floor(Math.random()*100000) : item.post_title;
             }
-            else node.name = item.title;
+
         } else if (node.type == "ville" ){
             node.name = item.title || "ville"+"-"+Math.floor(Math.random()*100000);
         }
