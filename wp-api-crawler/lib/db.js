@@ -9,6 +9,10 @@ var url = 'mongodb://localhost:27017/' + dbName;
 // connect to Mongo
 var db = mongojs(url)
 
+// collections
+var nodes = db.collection('nodes')
+var edges = db.collection('edges')
+
 db.runCommand('serverStatus', function (err, resp) {
     if(err) throw err;
     console.log("DB correctly running");
@@ -17,23 +21,19 @@ db.runCommand('serverStatus', function (err, resp) {
 
 db.on('ready',function() {
     console.log('database ready');
+    // reset data
+    nodes.drop();
+    edges.drop();
 });
 
 db.on('connect',function() {
     console.log('database connected');
+    console.log("Existing data dropped");
 });
 
-// db.on('error', function (err) {
-//     console.log('database error', err)
-// })
-
-// collections
-var nodes = db.collection('nodes')
-var edges = db.collection('edges')
-
-// nodes.drop();
-// edges.drop();
-// console.log("Existing data dropped");
+db.on('error', function (err) {
+    console.log('database error', err)
+})
 
 // Initialize the Ordered Batch to store all stuff properly
 var nodesBatch = [];
@@ -60,9 +60,9 @@ var insertOrUpdateEdge = function(edge) {
     insertOrUpdateNode(source);
     insertOrUpdateNode(target);
 
-    var edge = {  
-        "type" : edge.type, 
-        "source" : source.slug, 
+    var edge = {
+        "type" : edge.type,
+        "source" : source.slug,
         "target" : target.slug,
         "start" : edge.start,
         "end" : edge.end
@@ -78,9 +78,9 @@ addToEdgesBatch = function(edge) {
     edgesBatch
         .find({ "type" : edge.type, "source" : edge.source, "target" : edge.target}) // query
         .upsert()
-        .updateOne({ '$set' :  {  
-                "type" : edge.type, 
-                "source" : edge.source, 
+        .updateOne({ '$set' :  {
+                "type" : edge.type,
+                "source" : edge.source,
                 "target" : edge.target,
                 "start": edge.start,
                 "end" : edge.end
@@ -106,9 +106,9 @@ addToNodesBatch = function(node, callback) {
 
     // catch last bulk
     bulk
-        .find({ "slug" : node.slug, "type" : node.type}) // query 
+        .find({ "slug" : node.slug, "type" : node.type}) // query
         .upsert()
-        .updateOne({ 
+        .updateOne({
             name: node.name ,
             type: node.type  ,
             slug: node.slug ,
@@ -129,9 +129,9 @@ var nodesBatchExec = function(cb){
         return
     }
 
-    // log 
+    // log
     console.log(nodesBatch[execCount]._currCmd.updates.length, " nodes "+(execCount+1)+"/"+nodesBatch.length+" operations");
-    
+
     // exec
     nodesBatch[execCount].execute(function(err, results) {
         if(err) {
