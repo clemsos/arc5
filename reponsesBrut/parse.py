@@ -96,8 +96,6 @@ def build_clean_dataset(data, common_keys, survey_type):
     print "%s clean results"%len(clean_dataset)
     return clean_dataset
 
-
-
 def intersect(a, b):
     """ return the intersection of two lists """
     return list(set(a) & set(b))
@@ -215,6 +213,18 @@ if __name__ == "__main__":
         except KeyError:
             hasSubQuestion = False
 
+        # check if has ordering
+        try :
+            order = el["order"]
+        except KeyError:
+            order = []
+
+        def sort_by_order(d):
+            try:
+                return order.index(d)
+            except ValueError:
+                return
+
         # parse the question
         question = {}
         question["name"] = key
@@ -234,7 +244,6 @@ if __name__ == "__main__":
         if not hasSubQuestion and not isTitle:
             results = get_results(key)
             if question["chartType"] != "list":
-                # print key, question["results"]
                 count = dict(Counter(results))
                 chartData = [{
                     "name" : k,
@@ -242,8 +251,7 @@ if __name__ == "__main__":
                     "value" : count[k],
                     "color" : colorscale("#DF3C3C", .5*i+1)
                     }
-                    for i, k in enumerate(count) if k != ""]
-                # print key, chartData
+                    for i, k in enumerate(count) if count[k] != "" and k != "" and k != " "]
         elif not isTitle:
             # add a case for Partenaires (merge all into a single list)
             if key == "Partenaires":
@@ -255,13 +263,21 @@ if __name__ == "__main__":
                 for i, subkey in enumerate(el["subquestions"]):
                     results = get_results(subkey)
                     count = dict(Counter(results))
-                    point = {
-                        "name" : subkey,
-                        "label" : get_headers[subkey],
-                        "value" : count["Oui"],
-                        "color" : colorscale("#DF3C3C", .2*i)
-                    }
-                    chartData.append(point)
+                    if subkey != "":
+                        point = {
+                            "name" : subkey,
+                            "label" : get_headers[subkey],
+                            "value" : count["Oui"],
+                            "color" : colorscale("#DF3C3C", .2*i)
+                        }
+                        chartData.append(point)
+
+        # sort
+
+        if len(order):
+            chartData = sorted(chartData, key=lambda k: sort_by_order(k["name"]))
+        print "---%s"%key
+        for d in chartData : print d["name"]
 
         question["chartData"] = chartData
         question["results"] = results

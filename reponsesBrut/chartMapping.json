@@ -7,7 +7,13 @@
     },
     {
       "name" : "Importance",
-      "chartType": "bargraph"
+      "chartType": "bargraph",
+      "order" : [
+        "Sans importance particulière",
+        "Secondaire mais utile",
+        "Important",
+        "Primordial pour la réussite du projet"
+      ]
     },
     {
       "name" : "Le projet de recherche ",
@@ -31,7 +37,15 @@
     },
     {
       "name" : "Quantite",
-      "chartType": "bargraph"
+      "chartType": "bargraph",
+      "order": [
+          "5 et plus",
+          "3 ou 5 partenaires",
+          "3 et plus",
+          "1 ou 2 partenaires",
+          "Ne sait pas",
+          "Aucun"
+      ]
     },
     {
       "name" : "Partenaires",
@@ -83,7 +97,13 @@
     },
     {
       "name" : "Collaboration",
-      "chartType": "bargraph"
+      "chartType": "bargraph",
+      "order" : [
+        "Trés satisfait, une expérience à renouveler",
+        "Bien, des échanges intéressants",
+        "Normal, de manière professionnelle",
+        "Plutôt mal, décevant"
+      ]
     },
     {
       "name" :"Collaboration[comment]",
