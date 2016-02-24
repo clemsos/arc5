@@ -1,6 +1,15 @@
+header {
+  text-align: center;
+  margin: 50px auto;
+}
+header p {
+  font-size: 1.3em;
+}
+
 #navigation h4, #navigation h5 {
   list-style: none;
 }
+
 .container {
   padding-top: 7.5rem;
   padding-bottom: 7.5rem;
