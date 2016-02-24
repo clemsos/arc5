@@ -24,26 +24,34 @@
     		<div class="column">
 					<h1>Enquêtes ARC5</h1>
 					<h3>Résultats Questionnaires</h3>
+
+					<p>
+						Télécharger
+						<a href="ARC5-survey-final-results.csv">les données</a>
+						et
+						<a href="ARC5-survey-description.csv">leurs descriptions</a>
+						.
+					</p>
+					<hr>
 				</div>
 			</div>
 
+			<h2>Plan de l'enquête</h2>
 	    <ul id="navigation">
 	    {% for item in answers %}
-					<li>
 						{% if item.chartType == "title" %}
 							<h4>
 						{% elif item.chartType == "subtitle" %}
 							<h5>
-								<ul>
 						{% endif %}
+						<li>
 							<a href="#{{ item.name }}">{{ item.description }}</a>
+						</li>
 						{% if item.chartType == "title" %}
 								</h4>
 						{% elif item.chartType == "subtitle" %}
-								</ul>
 							</h5>
 						{% endif %}
-					</li>
 					{% if item.subquestions %}
 						<ul>
 							{% for sub in item.subquestions%}
@@ -54,12 +62,13 @@
 	    {% endfor %}
 	    </ul>
 
+			<hr>
+			<h2>Les résultats de l'enquête</h2>
 	    {% for item in answers %}
 					{% if item.chartType == "title" %}
-						<h2 id="{{item.name}}">{{item.description}}</h2>
-						<hr>
-					{% elif item.chartType == "subtitle" %}
 						<h3 id="{{item.name}}">{{item.description}}</h3>
+					{% elif item.chartType == "subtitle" %}
+						<h4 id="{{item.name}}">{{item.description}}</h4>
 					{% elif item.chartType == "list" %}
 						<h5 id="{{item.name}}">{{item.description}}</h5>
 						<ul id="navigation">
