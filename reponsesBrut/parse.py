@@ -263,10 +263,15 @@ if __name__ == "__main__":
                 for i, subkey in enumerate(el["subquestions"]):
                     results = get_results(subkey)
                     count = dict(Counter(results))
+                    label = get_headers[subkey]
+                    if label.startswith("Comment avez".decode("utf-8")):
+                        label = get_headers[subkey].split( "Comment avez-vous été amené(e) à travailler avec ces partenaires ? ".decode("utf-8") )[1]
+                    elif label.startswith("Comment a ".decode("utf-8")):
+                        label = get_headers[subkey].split("Comment a été financé ce projet ? ".decode("utf-8"))[1]
                     if subkey != "":
                         point = {
                             "name" : subkey,
-                            "label" : get_headers[subkey],
+                            "label" : label,
                             "value" : count["Oui"],
                             "color" : colorscale("#DF3C3C", .2*i)
                         }

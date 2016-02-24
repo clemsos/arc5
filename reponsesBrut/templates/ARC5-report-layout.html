@@ -78,36 +78,43 @@
 			    	</ul>
 					{% else %}
 						<h5 id="{{item.name}}">{{item.description}}</h5>
-						<canvas id="{{item.name}}-chart" width="400" height="400"></canvas>
+						<div id="{{item.name}}-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					{% endif %}
 	    {% endfor %}
 	</div>
 </div>
 		</main>
+		<script src="js/jquery.js" charset="utf-8"></script>
 		<script src="js/Chart.min.js" charset="utf-8"></script>
-		<!-- <script src="js/jquery.js" charset="utf-8"></script>
+		<script src="js/Chart.HorizontalBar.js" charset="utf-8"></script>
+		<script src="js/legend.js" charset="utf-8"></script>
+		<!--
 		<script src="js/jquery.peity.js" charset="utf-8"></script> -->
 		<script type="text/javascript">
 		window.onload = function() {
 			console.log("loaded!");
-			var contexts = [];
 
 			var createPieChart = function (id, data){
 				// Get the context of the canvas element we want to select
-				var ctx = document.getElementById(id).getContext("2d");
+				var ctx = $("#"+id+" canvas")[0].getContext("2d");
 				var myNewChart = new Chart(ctx).Pie(data);
 			}
 
+			var randomColorGenerator = function () {
+			    return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
+			};
 			var createBarGraph = function (id, data){
 				// Get the context of the canvas element we want to select
-				var ctx = document.getElementById(id).getContext("2d");
-				console.log(data);
+				var ctx = $("#"+id+" canvas")[0].getContext("2d");
+				// console.log(data);
 				var final = {
 					'labels' : [],
 					datasets: []
 				}
 				var dataset = {
-					fillColor: "rgba(220,220,220,0.5)",
+					fillColor: randomColorGenerator(),
 					strokeColor: "rgba(220,220,220,0.8)",
 					highlightFill: "rgba(220,220,220,0.75)",
 					highlightStroke: "rgba(220,220,220,1)",
@@ -119,13 +126,13 @@
 				})
 				final.datasets.push(dataset);
 
-				console.log(final);
-				var myNewChart = new Chart(ctx).Bar(final);
+				var myBarChart = new Chart(ctx).HorizontalBar(final);
+				// legend($("#"+id+" .legendChart")[0], data);
 			}
 
 			{% for item in answers %}
 				// console.log("{{ loop.index}}");
-				console.log("{{item.chartType}}");
+				// console.log("{{item.chartType}}");
 				{% if item.chartType == "pie" %}
 					createPieChart("{{item.name}}-chart", {{ item.chartData | tojson}})
 				{% elif item.chartType == "bargraph" %}

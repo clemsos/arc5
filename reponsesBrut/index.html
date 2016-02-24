@@ -235,7 +235,9 @@
 	    
 					
 						<h5 id="Importance">Comment envisagez-vous l'implication d'acteurs issus du paysage culturel lors de la conception de vos projets de recherche ?</h5>
-						<canvas id="Importance-chart" width="400" height="400"></canvas>
+						<div id="Importance-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -450,7 +452,9 @@ place du schéma de développement culturel.</li>
 	    
 					
 						<h5 id="ARC5">S'agit-t-il d'un projet soutenu il y a quelques années par les clusters 13 ou 14? ou plus récemment par l'</h5>
-						<canvas id="ARC5-chart" width="400" height="400"></canvas>
+						<div id="ARC5-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -459,7 +463,9 @@ place du schéma de développement culturel.</li>
 	    
 					
 						<h5 id="Quantite">Combien de partenaires culturels sont associés dans vos projets de recherche ? </h5>
-						<canvas id="Quantite-chart" width="400" height="400"></canvas>
+						<div id="Quantite-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -861,7 +867,9 @@ place du schéma de développement culturel.</li>
 	    
 					
 						<h5 id="Rencontre">Rencontre</h5>
-						<canvas id="Rencontre-chart" width="400" height="400"></canvas>
+						<div id="Rencontre-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -955,7 +963,9 @@ place du schéma de développement culturel.</li>
 	    
 					
 						<h5 id="FinancementActeurs">FinancementActeurs</h5>
-						<canvas id="FinancementActeurs-chart" width="400" height="400"></canvas>
+						<div id="FinancementActeurs-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -1049,7 +1059,9 @@ place du schéma de développement culturel.</li>
 	    
 					
 						<h5 id="Collaboration">La collaboration avec les partenaires culturels s'est-t-elle bien déroulée ? </h5>
-						<canvas id="Collaboration-chart" width="400" height="400"></canvas>
+						<div id="Collaboration-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -1241,7 +1253,9 @@ GRESEC : Apport en évaluation auprès du public </li>
 	    
 					
 						<h5 id="Suite">A l'avenir, souhaitez-vous que l'implication de collaborateurs extérieurs dans la recherche </h5>
-						<canvas id="Suite-chart" width="400" height="400"></canvas>
+						<div id="Suite-chart" class="row">
+							<canvas  width="800" height="400"></canvas>
+						</div>
 					
 	    
 					
@@ -1534,30 +1548,35 @@ Il faut continuer les dynamiques initiées par le Clusters, hélas réduites par
 	</div>
 </div>
 		</main>
+		<script src="js/jquery.js" charset="utf-8"></script>
 		<script src="js/Chart.min.js" charset="utf-8"></script>
-		<!-- <script src="js/jquery.js" charset="utf-8"></script>
+		<script src="js/Chart.HorizontalBar.js" charset="utf-8"></script>
+		<script src="js/legend.js" charset="utf-8"></script>
+		<!--
 		<script src="js/jquery.peity.js" charset="utf-8"></script> -->
 		<script type="text/javascript">
 		window.onload = function() {
 			console.log("loaded!");
-			var contexts = [];
 
 			var createPieChart = function (id, data){
 				// Get the context of the canvas element we want to select
-				var ctx = document.getElementById(id).getContext("2d");
+				var ctx = $("#"+id+" canvas")[0].getContext("2d");
 				var myNewChart = new Chart(ctx).Pie(data);
 			}
 
+			var randomColorGenerator = function () {
+			    return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
+			};
 			var createBarGraph = function (id, data){
 				// Get the context of the canvas element we want to select
-				var ctx = document.getElementById(id).getContext("2d");
-				console.log(data);
+				var ctx = $("#"+id+" canvas")[0].getContext("2d");
+				// console.log(data);
 				var final = {
 					'labels' : [],
 					datasets: []
 				}
 				var dataset = {
-					fillColor: "rgba(220,220,220,0.5)",
+					fillColor: randomColorGenerator(),
 					strokeColor: "rgba(220,220,220,0.8)",
 					highlightFill: "rgba(220,220,220,0.75)",
 					highlightStroke: "rgba(220,220,220,1)",
@@ -1569,115 +1588,115 @@ Il faut continuer les dynamiques initiées par le Clusters, hélas réduites par
 				})
 				final.datasets.push(dataset);
 
-				console.log(final);
-				var myNewChart = new Chart(ctx).Bar(final);
+				var myBarChart = new Chart(ctx).HorizontalBar(final);
+				// legend($("#"+id+" .legendChart")[0], data);
 			}
 
 			
 				// console.log("1");
-				console.log("title");
+				// console.log("title");
 				
 			
 				// console.log("2");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
 					createBarGraph("Importance-chart", [{"color": "#ffb4b4", "name": "Sans importance particuli\u00e8re", "value": 4, "label": "Sans importance particuli\u00e8re"}, {"color": "#ff5a5a", "name": "Secondaire mais utile", "value": 7, "label": "Secondaire mais utile"}, {"color": "#ff7878", "name": "Important", "value": 10, "label": "Important"}, {"color": "#df3c3c", "name": "Primordial pour la r\u00e9ussite du projet", "value": 14, "label": "Primordial pour la r\u00e9ussite du projet"}])
 				
 			
 				// console.log("3");
-				console.log("title");
+				// console.log("title");
 				
 			
 				// console.log("4");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("5");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("6");
-				console.log("pie");
+				// console.log("pie");
 				
 					createPieChart("ARC5-chart", [{"color": "#df3c3c", "name": "Oui", "value": 8, "label": "Oui"}, {"color": "#ff5a5a", "name": "Non", "value": 12, "label": "Non"}])
 				
 			
 				// console.log("7");
-				console.log("subtitle");
+				// console.log("subtitle");
 				
 			
 				// console.log("8");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
 					createBarGraph("Quantite-chart", [{"color": "#ffd2d2", "name": "5 et plus", "value": 1, "label": "5 et plus"}, {"color": "#ff5a5a", "name": "3 ou 5 partenaires", "value": 5, "label": "3 ou 5 partenaires"}, {"color": "#fff0f0", "name": "3 et plus", "value": 9, "label": "3 et plus"}, {"color": "#ff7878", "name": "1 ou 2 partenaires", "value": 15, "label": "1 ou 2 partenaires"}, {"color": "#ff9696", "name": "Ne sait pas", "value": 1, "label": "Ne sait pas"}, {"color": "#ffb4b4", "name": "Aucun", "value": 4, "label": "Aucun"}])
 				
 			
 				// console.log("9");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("10");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
-					createBarGraph("Rencontre-chart", [{"color": "#000000", "name": "Rencontre[SQ001]", "value": 8, "label": "Comment avez-vous \u00e9t\u00e9 amen\u00e9(e) \u00e0 travailler avec ces partenaires ? [Nous avions d\u00e9j\u00e0 travaill\u00e9 ensemble auparavant]"}, {"color": "#2c0c0c", "name": "Rencontre[SQ002]", "value": 5, "label": "Comment avez-vous \u00e9t\u00e9 amen\u00e9(e) \u00e0 travailler avec ces partenaires ? [Le partenaire a initii\u00e9 la recontre en nous contactant]"}, {"color": "#591818", "name": "Rencontre[SQ003]", "value": 5, "label": "Comment avez-vous \u00e9t\u00e9 amen\u00e9(e) \u00e0 travailler avec ces partenaires ? [Nous avons cherch\u00e9e \u00e0 nous associer \u00e0 un nouveau partenaire en raisons des sp\u00e9cificit\u00e9s du projet]"}, {"color": "#852424", "name": "Rencontre[SQ004]", "value": 4, "label": "Comment avez-vous \u00e9t\u00e9 amen\u00e9(e) \u00e0 travailler avec ces partenaires ? [Moi ou un des membres de mon \u00e9quipe sommes proches d'un des membre de l'organisme partenaires]"}, {"color": "#b23030", "name": "Rencontre[SQ005]", "value": 2, "label": "Comment avez-vous \u00e9t\u00e9 amen\u00e9(e) \u00e0 travailler avec ces partenaires ? [Nous avons un partenariat officiel de longue date avec cette institution]"}])
+					createBarGraph("Rencontre-chart", [{"color": "#000000", "name": "Rencontre[SQ001]", "value": 8, "label": "[Nous avions d\u00e9j\u00e0 travaill\u00e9 ensemble auparavant]"}, {"color": "#2c0c0c", "name": "Rencontre[SQ002]", "value": 5, "label": "[Le partenaire a initii\u00e9 la recontre en nous contactant]"}, {"color": "#591818", "name": "Rencontre[SQ003]", "value": 5, "label": "[Nous avons cherch\u00e9e \u00e0 nous associer \u00e0 un nouveau partenaire en raisons des sp\u00e9cificit\u00e9s du projet]"}, {"color": "#852424", "name": "Rencontre[SQ004]", "value": 4, "label": "[Moi ou un des membres de mon \u00e9quipe sommes proches d'un des membre de l'organisme partenaires]"}, {"color": "#b23030", "name": "Rencontre[SQ005]", "value": 2, "label": "[Nous avons un partenariat officiel de longue date avec cette institution]"}])
 				
 			
 				// console.log("11");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("12");
-				console.log("subtitle");
+				// console.log("subtitle");
 				
 			
 				// console.log("13");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
-					createBarGraph("FinancementActeurs-chart", [{"color": "#000000", "name": "Financement[SQ001]", "value": 4, "label": "Comment a \u00e9t\u00e9 financ\u00e9 ce projet ? [Minist\u00e8re (ANR / CNRS)]"}, {"color": "#2c0c0c", "name": "Financement[SQ003]", "value": 8, "label": "Comment a \u00e9t\u00e9 financ\u00e9 ce projet ? [R\u00e9gion Rh\u00f4ne-Alpes (Cluster ou ARC5)]"}, {"color": "#591818", "name": "Financement[SQ004]", "value": 5, "label": "Comment a \u00e9t\u00e9 financ\u00e9 ce projet ? [Commune / Intercommuncalit\u00e9 / Conseil D\u00e9partemental]"}, {"color": "#852424", "name": "Financement[SQ006]", "value": 2, "label": "Comment a \u00e9t\u00e9 financ\u00e9 ce projet ? [Communaut\u00e9 Europ\u00e9enne]"}])
+					createBarGraph("FinancementActeurs-chart", [{"color": "#000000", "name": "Financement[SQ001]", "value": 4, "label": "[Minist\u00e8re (ANR / CNRS)]"}, {"color": "#2c0c0c", "name": "Financement[SQ003]", "value": 8, "label": "[R\u00e9gion Rh\u00f4ne-Alpes (Cluster ou ARC5)]"}, {"color": "#591818", "name": "Financement[SQ004]", "value": 5, "label": "[Commune / Intercommuncalit\u00e9 / Conseil D\u00e9partemental]"}, {"color": "#852424", "name": "Financement[SQ006]", "value": 2, "label": "[Communaut\u00e9 Europ\u00e9enne]"}])
 				
 			
 				// console.log("14");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("15");
-				console.log("subtitle");
+				// console.log("subtitle");
 				
 			
 				// console.log("16");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
 					createBarGraph("Collaboration-chart", [{"color": "#ff7878", "name": "Tr\u00e9s satisfait, une exp\u00e9rience \u00e0 renouveler", "value": 8, "label": "Tr\u00e9s satisfait, une exp\u00e9rience \u00e0 renouveler"}, {"color": "#ff9696", "name": "Bien, des \u00e9changes int\u00e9ressants", "value": 7, "label": "Bien, des \u00e9changes int\u00e9ressants"}, {"color": "#ff5a5a", "name": "Normal, de mani\u00e8re professionnelle", "value": 1, "label": "Normal, de mani\u00e8re professionnelle"}, {"color": "#ffd2d2", "name": "Plut\u00f4t mal, d\u00e9cevant", "value": 1, "label": "Plut\u00f4t mal, d\u00e9cevant"}])
 				
 			
 				// console.log("17");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("18");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("19");
-				console.log("bargraph");
+				// console.log("bargraph");
 				
 					createBarGraph("Suite-chart", [{"color": "#ff7878", "name": "se d\u00e9veloppe", "value": 15, "label": "se d\u00e9veloppe"}, {"color": "#ff9696", "name": "reste inchang\u00e9e", "value": 1, "label": "reste inchang\u00e9e"}])
 				
 			
 				// console.log("20");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("21");
-				console.log("list");
+				// console.log("list");
 				
 			
 				// console.log("22");
-				console.log("title");
+				// console.log("title");
 				
 			
 				// console.log("23");
-				console.log("list");
+				// console.log("list");
 				
 			
 
