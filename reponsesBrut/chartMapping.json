@@ -1,0 +1,117 @@
+{
+  "questions" :
+  [
+    {
+      "name" : "Regard sur les partenariats culture / recherche",
+      "chartType" : "title"
+    },
+    {
+      "name" : "Importance",
+      "chartType": "bargraph"
+    },
+    {
+      "name" : "Le projet de recherche ",
+      "chartType" : "title"
+    },
+    {
+      "name" : "NomProjet",
+      "chartType": "list"
+    },
+    {
+      "name" : "Description",
+      "chartType": "list"
+    },
+    {
+      "name" : "ARC5",
+      "chartType": "pie"
+    },
+    {
+      "name" : "Partenaires",
+      "chartType" : "subtitle"
+    },
+    {
+      "name" : "Quantite",
+      "chartType": "bargraph"
+    },
+    {
+      "name" : "Partenaires",
+      "chartType": "list",
+      "subquestions": [
+        "Partenaires[SQ001]",
+        "Partenaires[SQ002]",
+        "Partenaires[SQ003]",
+        "Partenaires[SQ004]",
+        "Partenaires[SQ005]"
+      ]
+    },
+    {
+      "name" : "Rencontre",
+      "chartType": "bargraph",
+       "subquestions": [
+         "Rencontre[SQ001]",
+         "Rencontre[SQ002]",
+         "Rencontre[SQ003]",
+         "Rencontre[SQ004]",
+         "Rencontre[SQ005]"
+       ]
+   },
+    {
+     "name" :"Rencontre[other]",
+     "chartType": "list"
+   },
+    {
+      "name" : "Financements",
+      "chartType" : "subtitle"
+    },
+    {
+      "name" :"FinancementActeurs",
+      "chartType": "bargraph",
+      "subquestions": [
+        "Financement[SQ001]",
+        "Financement[SQ003]",
+        "Financement[SQ004]",
+        "Financement[SQ006]"
+      ]
+    },
+     {
+       "name" : "Financement[other]",
+       "chartType": "list"
+    },
+    {
+      "name" : "Bilan",
+      "chartType" : "subtitle"
+    },
+    {
+      "name" : "Collaboration",
+      "chartType": "bargraph"
+    },
+    {
+      "name" :"Collaboration[comment]",
+      "chartType": "list"
+    },
+
+    {
+      "name" : "Reinvestissements",
+      "chartType": "list"
+    },
+    {
+      "name" : "Suite",
+      "chartType": "bargraph"
+    },
+    {
+      "name" : "Suite[comment]",
+      "chartType": "list"
+    },
+  {
+    "name" : "Apport",
+    "chartType": "list"
+  },
+  {
+    "name" : "Suggestions",
+    "chartType" : "title"
+  },
+  {
+    "name": "Region",
+    "chartType": "list"
+  }
+]}

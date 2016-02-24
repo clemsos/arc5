@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="robots" content="index, follow">
+		<meta name="theme-color" content="#f4f5f6">
+		<meta name="apple-mobile-web-app-status-bar-style" content="#f4f5f6">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>ARC5 | Questionnaire.</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+		<link rel="stylesheet" href="css/font-awesome.min.css">
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/milligram.css">
+		<link rel="stylesheet" href="css/style.css">
+		<link rel="icon" href="https://milligram.github.io/img/favicon.png">
+		<script src="js/d3.v3.min.js" charset="utf-8"></script>
+
+	</head>
+	<body>
+		<main class="wrapper">
+		<div class="container">
+			<div class="row">
+    		<div class="column">
+					<h1>Enquêtes ARC5</h1>
+					<h3>Résultats Questionnaires</h3>
+				</div>
+			</div>
+
+	    <ul id="navigation">
+	    {% for item in answers %}
+					<li>
+						{% if item.chartType == "title" %}
+							<h4>
+						{% elif item.chartType == "subtitle" %}
+							<h5>
+								<ul>
+						{% endif %}
+							<a href="#{{ item.name }}">{{ item.description }}</a>
+						{% if item.chartType == "title" %}
+								</h4>
+						{% elif item.chartType == "subtitle" %}
+								</ul>
+							</h5>
+						{% endif %}
+					</li>
+					{% if item.subquestions %}
+						<ul>
+							{% for sub in item.subquestions%}
+								<li><a href="#{{ item.name }}">{{ sub.description }}</a></li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+	    {% endfor %}
+	    </ul>
+
+	    {% for item in answers %}
+					{% if item.chartType == "title" %}
+						<h2 id="{{item.name}}">{{item.description}}</h2>
+						<hr>
+					{% elif item.chartType == "subtitle" %}
+						<h3 id="{{item.name}}">{{item.description}}</h3>
+					{% elif item.chartType == "list" %}
+						<h5 id="{{item.name}}">{{item.description}}</h5>
+						<ul id="navigation">
+							{% for result in item.results %}
+								{% if result %}<li>{{ result }}</li>{% endif %}
+			    		{% endfor %}
+			    	</ul>
+					{% else %}
+						<h5 id="{{item.name}}">{{item.description}}</h5>
+						<canvas id="{{item.name}}-chart" width="400" height="400"></canvas>
+					{% endif %}
+	    {% endfor %}
+	</div>
+</div>
+		</main>
+		<script src="js/Chart.min.js" charset="utf-8"></script>
+		<!-- <script src="js/jquery.js" charset="utf-8"></script>
+		<script src="js/jquery.peity.js" charset="utf-8"></script> -->
+		<script type="text/javascript">
+		window.onload = function() {
+			console.log("loaded!");
+			var contexts = [];
+
+			var createPieChart = function (id, data){
+				// Get the context of the canvas element we want to select
+				var ctx = document.getElementById(id).getContext("2d");
+				var myNewChart = new Chart(ctx).Pie(data);
+			}
+
+			var createBarGraph = function (id, data){
+				// Get the context of the canvas element we want to select
+				var ctx = document.getElementById(id).getContext("2d");
+				console.log(data);
+				var final = {
+					'labels' : [],
+					datasets: []
+				}
+				var dataset = {
+					fillColor: "rgba(220,220,220,0.5)",
+					strokeColor: "rgba(220,220,220,0.8)",
+					highlightFill: "rgba(220,220,220,0.75)",
+					highlightStroke: "rgba(220,220,220,1)",
+					data:[]
+				};
+				data.forEach(function(d){
+					final.labels.push(d.label);
+					dataset.data.push(Number(d.value));
+				})
+				final.datasets.push(dataset);
+
+				console.log(final);
+				var myNewChart = new Chart(ctx).Bar(final);
+			}
+
+			{% for item in answers %}
+				// console.log("{{ loop.index}}");
+				console.log("{{item.chartType}}");
+				{% if item.chartType == "pie" %}
+					createPieChart("{{item.name}}-chart", {{ item.chartData | tojson}})
+				{% elif item.chartType == "bargraph" %}
+					createBarGraph("{{item.name}}-chart", {{ item.chartData | tojson}})
+				{% endif %}
+			{% endfor %}
+
+		}
+
+		</script>
+	</body>
+</html>
