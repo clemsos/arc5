@@ -11,6 +11,8 @@ import argparse
 import pickle
 import os
 
+print
+
 # create empty (undirected) graph
 G=nx.Graph()
 
@@ -20,7 +22,7 @@ with open(edges_file, "r") as f :
     reader = csv.DictReader(f)
     for edge in reader :
         # print edge
-        G.add_edge(edge["source"], edge["target"], {'group' : edge['type']})
+        G.add_edge(edge["source"], edge["target"], {'type' : edge['type']})
 
 print "#"*10
 print "ORIGINAL NETWORK"
@@ -262,11 +264,79 @@ for person in persons:
     # remove person from the graph
     clean_G.remove_node(person)
 
+assert len(set.intersection(set(persons), set(clean_G.nodes() ))) == 0
+assert "personne" not in [ n[1]["type"] for n in clean_G.nodes(data=True)]
 print "-"*10
 print "%s nodes after conversion of person from nodes to edges"%len(clean_G.nodes())
 print "%s edges after conversion of person from nodes to edges"%len(clean_G.edges())
 
 
-#export to scipy sparse matrix
-# A = nx.adjacency_matrix(G)
-# print(A.todense())
+
+print
+print "#"*10
+print "SAVE CLEAN VERSIONS"
+print
+
+# change edges types
+print Counter([n[2]["type"] for n in clean_G.edges(data=True)]).keys()
+
+clean_edge_types = {
+    'ville' : "travaille dans la ville de",
+    'ecole-doctorale' : "héberge le doctorant",
+    'etablissement' : "pilote le projet",
+    'personne' : "ont des membres communs avec",
+    'etablissements_gestionnaires' : "gère le projet",
+    'projet' : "est partenaire de",
+    'partenaire' : "est partenaire de",
+    'laboratoire' : "héberge"
+}
+
+## save graph to a CSV file
+with open('ARC5_final_edges.csv', 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["source", "target", "type"])
+    for n in clean_G.edges(data=True):
+        data = n[2]
+        row = [n[0], n[1], clean_edge_types[data["type"] ] ]
+        wr.writerow(row)
+
+print "edges saved as ARC5_final_edges.csv"
+
+with open('ARC5_final_nodes.csv', 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["id", "name", "type", "start", "end", "axe"])
+    for n in clean_G.nodes(data=True):
+        data = n[1]
+        row = [n[0], data["name"], data["type"], data["start"], data["end"], data["axe.id"]]
+        wr.writerow(row)
+print "nodes saved as ARC5_final_nodes.csv"
+
+
+print
+print "#"*10
+print "CENTRALITY METRICS"
+## calculate centrality metrics:
+degree = nx.degree_centrality(clean_G)
+print "-- degree"
+between = nx.betweenness_centrality(clean_G)
+print "-- betweenness_centrality"
+close = nx.closeness_centrality(clean_G)
+print "-- closeness_centrality"
+
+## save the multiple centrality metrics to a CSV file
+with open('network_metrics.csv', 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["name", "degree", "betweenness_centrality", "closeness_centrality"])
+    for n in clean_G:
+        wr.writerow([n, degree[n], between[n], close[n]])
+
+print "Values saved to network_metrics.csv"
+
+print
+print "#"*10
+print "HUMAN READABLE VERSION"
+
+with open('ARC5_human_readable.txt', 'wb') as metrics_file:
+    for n in clean_G.edges(data=True):
+        line =  "%s %s %s \n\n"%(clean_G.node[n[1]]["name"], clean_edge_types[data["type"]], clean_G.node[n[0]]["name"])
+        metrics_file.write(line)
