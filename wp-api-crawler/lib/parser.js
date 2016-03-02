@@ -123,7 +123,7 @@ function parseNode(item) {
 
         node.bddLink = item.link || "";
 
-        if(node.type == "partenaire") console.log(item);
+        // if(node.type == "partenaire") console.log(item);
 
         // parse date, axe
         if (node.type == "projet" || node.type == "these" || node.type == "postdoc") {

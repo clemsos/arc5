@@ -4,7 +4,7 @@ var api = require("./lib/api")
     , utils = require("./lib/utils")
     , methods = require("./lib/db");
 
-// LOG file 
+// LOG file
 var logger = require('winston');
 logger.add(logger.transports.File, { filename: 'arc5.log', prettyPrint : true });
 // logger.level = 'debug';
@@ -36,8 +36,8 @@ for (var i = 0; i < wpIndex.length; i++) {
 var loops = 0;
 function saveEdgesAndNodes (items, edgesBatch, nodesBatch) {
 
-    // count function calls to keep track of progresses 
-    loops++; 
+    // count function calls to keep track of progresses
+    loops++;
 
     for (var z = 0; z < items.length; z++) {
         var item = items[z];
@@ -45,7 +45,7 @@ function saveEdgesAndNodes (items, edgesBatch, nodesBatch) {
         if(item) {
 
             // save node
-            var node = parser.parseNode(item); 
+            var node = parser.parseNode(item);
             methods.insertOrUpdateNode(node);
 
             // create edges and target nodes
@@ -77,12 +77,12 @@ function saveEdgesAndNodes (items, edgesBatch, nodesBatch) {
 
 
 function saveEdge (edge) {
-    console.log(edge);
+    // console.log(edge);
 }
 
 function getAndParseNode(_id, callback){
     api.getSingleItem(_id, function (item) {
-        if (! item.type) return; 
+        if (! item.type) return;
         else parser.getNode(item, function (node) {
             callback(node);
         });
@@ -132,12 +132,12 @@ function getAllThesesFromCSV(callback) {
             // parser.getNode(items[i], function (node) {
             // if (nodes.length == projects.length) callback(nodes);
             // });
-   
+
             // console.log(i);
             parser.getRelationships(items[i], function (edges) {
                 // console.log(edges);
             })
-   
+
         //     parser.getNode(items[i], function (node) {
         //         nodes.push(node)
         //         if (nodes.length == items.length) callback(nodes);

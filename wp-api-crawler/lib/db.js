@@ -53,8 +53,8 @@ var insertOrUpdateEdge = function(edge) {
     var source = edge.source;
     var target = edge.target;
 
-    if(!source.slug) console.log(source);
-    if(!target.slug) console.log(target);
+    // if(!source.slug) console.log(source);
+    // if(!target.slug) console.log(target);
 
     // write to db
     insertOrUpdateNode(source);
