@@ -9,6 +9,10 @@ import codecs
 from jinja2 import Environment, FileSystemLoader
 import json
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 TEMPLATE_ENVIRONMENT = Environment(
@@ -333,8 +337,8 @@ if __name__ == "__main__":
     print "Culture"
     create_index_html(clean_recherche, "Questionnaire Recherche", questions, os.path.join(RESULTS_PATH, "ARC5_resultats_recherche.html"))
 
-    # print "#"*10
-    # print "Recherche + Culture"
-    # questions_merged = { row["name"] : row["description"].decode('utf-8')  for row in headers_common  }
-    # questions_merged["type"] = "Type de questionnaire (Recherche ou Culture)"
-    # create_index_html(clean_merged_dataset, "Résulats Recherche+Culture", questions_merged, "ARC5_resultats_total.html")
+    print "#"*10
+    print "Recherche + Culture"
+    questions_merged = { row["name"] : row["description"].decode('utf-8')  for row in headers_common  }
+    questions_merged["type"] = "Type de questionnaire (Recherche ou Culture)"
+    create_index_html(clean_merged_dataset, "Résulats Recherche+Culture", questions_merged, "ARC5_resultats_total.html")
