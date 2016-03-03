@@ -1,8 +1,10 @@
 data
-venv 
+venv
 arc5.sublime-*
 models
 tests
+
+results
 
 # Logs
 logs

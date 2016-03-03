@@ -11,7 +11,8 @@ import argparse
 import pickle
 import os
 
-print
+# results folder
+results_folder = os.path.join(os.getcwd(), "../results")
 
 # create empty (undirected) graph
 G=nx.Graph()
@@ -42,10 +43,10 @@ with open(nodes_file, "r") as f :
         else :
             print excluded_nodes
 
-types = Counter([ g[1]["type"] for g in G.nodes(data=True) ]).keys()
-
-print "%s nodes : %s "%(len(G.nodes()),types)
-print "%s edges"%len(G.edges())
+node_types = Counter([ g[1]["type"] for g in G.nodes(data=True) ])
+edge_types = Counter([ g[2]["type"] for g in G.edges(data=True) ])
+print "%s nodes : %s "%(len(G.nodes()),node_types)
+print "%s edges: %s"%(len(G.edges()),edge_types)
 
 
 ### check for similar nodes
@@ -204,11 +205,11 @@ for n in G.nodes(data=True):
             excluded_nodes.append(m)
 
     # excludes unnamed projects and partenaires
-    elif m.startswith("projet-") or m.startswith("partenaire-"):
+    elif m.startswith("projet-") or m.startswith("partenaire-") or m.startswith("ecole-doctorale"):
         excluded_nodes.append(m)
 
     # get clean names
-    if m in match_series:
+    elif m in match_series:
         # arbitrary select first item as the good node
         clean_names[m] = m
         similar_nodes = list(set(match_series[m]))
@@ -218,7 +219,8 @@ for n in G.nodes(data=True):
         # store nodes that have been deleted
         duplicates_nodes += similar_nodes
 
-print "%s deleted nodes"%len(duplicates_nodes)
+print "%s duplicate nodes"%len(duplicates_nodes)
+print "%s excluded nodes (unknown or singleton)"%len(excluded_nodes)
 
 # parse nodes for the whole graph
 for n in G.nodes():
@@ -227,7 +229,7 @@ for n in G.nodes():
 
 # get only clean nodes and edges
 for n in G.nodes(data=True):
-    if n not in excluded_nodes:
+    if n[0] not in excluded_nodes:
         real_name = clean_names[n[0]]
         data = n[1]
         if real_name in villes :
@@ -241,8 +243,10 @@ for e in G.edges(data=True):
         target = clean_names[e[1]]
         clean_G.add_edge(source, target, e[2] ) # rename edges properly and add to the graph
 
+print set.intersection(set(clean_G.nodes()), set(excluded_nodes))
 # make sure that no deleted node is present in the final graph
 assert len(set.intersection(set(clean_G.nodes()), set(duplicates_nodes))) == 0
+assert len(set.intersection(set(clean_G.nodes()), set(excluded_nodes))) == 0
 
 print "-"*10
 print "%s nodes merged"%(len(G.nodes())-len(clean_G.nodes()))
@@ -302,33 +306,41 @@ print "SAVE CLEAN VERSIONS"
 print
 
 # change edges types
-print Counter([n[2]["type"] for n in clean_G.edges(data=True)]).keys()
+final_edges_types = Counter([n[2]["type"] for n in clean_G.edges(data=True)])
+print "final edges types : %s"%final_edges_types
+
+## save graph to a CSV file
+with open(os.path.join(results_folder,'ARC5_edges_wrapup.txt'), 'wb') as wrapup_file:
+    wrapup_file.write("Types of edges\n")
+    wrapup_file.write("---\n")
+    for e in final_edges_types:
+        line = "%s : %s edges \n"%(e, final_edges_types[e])
+        wrapup_file.write(line)
 
 clean_edge_types = {
     'ville' : "dans la ville de " ,
     'doctorant' : "en thèse",
-    'personne' : "membre communs du projet",
+    'personne' : "est membre de",
     'laboratoire' : "hebergé par le laboratoire",
     'etablissement' : "gère",
     'etablissements_gestionnaires' : "gère",
-    'projet' : "est partenaire de",
+    'projet' : "travaille avec",
     'partenaire' : "est partenaire de",
     'ecole-doctorale' : "fait sa thèse à"
 }
 
-
 ## save graph to a CSV file
-with open('ARC5_final_edges.csv', 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_final_edges.csv'), 'wb') as metrics_file:
     wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
-    wr.writerow(["source", "target", "type"])
+    wr.writerow(["source", "target", "type", "name"])
     for n in clean_G.edges(data=True):
         data = n[2]
-        row = [n[0], n[1], clean_edge_types[data["type"] ] ]
+        row = [n[0], n[1], data["type"], clean_edge_types[data["type"]] ]
         wr.writerow(row)
 
 print "edges saved as ARC5_final_edges.csv"
 
-with open('ARC5_final_nodes.csv', 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_final_nodes.csv'), 'wb') as metrics_file:
     wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
     wr.writerow(["id", "name", "type", "start", "end", "axe"])
     for n in clean_G.nodes(data=True):
@@ -350,11 +362,11 @@ close = nx.closeness_centrality(clean_G)
 print "-- closeness_centrality"
 
 ## save the multiple centrality metrics to a CSV file
-with open('network_metrics.csv', 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_network_metrics.csv'), 'wb') as metrics_file:
     wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
     wr.writerow(["name", "degree", "betweenness_centrality", "closeness_centrality"])
     for n in clean_G:
-        wr.writerow([n, degree[n], between[n], close[n]])
+        wr.writerow([clean_G.node[n]["name"], degree[n], between[n], close[n]])
 
 print "Values saved to network_metrics.csv"
 
@@ -362,7 +374,7 @@ print
 print "#"*10
 print "HUMAN READABLE VERSION"
 
-with open('ARC5_human_readable.txt', 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_human_readable.txt'), 'wb') as metrics_file:
     for n in clean_G.edges(data=True):
-        line =  "%s %s %s \n\n"%(clean_G.node[n[1]]["name"], clean_edge_types[data["type"]], clean_G.node[n[0]]["name"])
+        line =  "'%s' %s '%s' \n\n"%(clean_G.node[n[1]]["name"], clean_edge_types[data["type"]], clean_G.node[n[0]]["name"])
         metrics_file.write(line)
