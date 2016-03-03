@@ -9,11 +9,11 @@ import codecs
 from jinja2 import Environment, FileSystemLoader
 import json
 
-PATH = os.path.dirname(os.path.abspath(__file__))
+RESULTS_PATH = os.path.dirname(os.path.abspath(__file__))
 
 TEMPLATE_ENVIRONMENT = Environment(
     autoescape=False,
-    loader=FileSystemLoader(os.path.join(PATH, 'templates')),
+    loader=FileSystemLoader(os.path.join(RESULTS_PATH, 'templates')),
     trim_blocks=False)
 
 def clamp(val, minimum=0, maximum=255):
@@ -60,17 +60,17 @@ TEMPLATE_ENVIRONMENT.filters['tojson'] = do_json
 def render_template(template_filename, context):
     return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
-def create_index_html(context):
-    fname = 'index.html'
+def create_html_file(context, fname):
     #
     with codecs.open(fname, 'w', "utf-8") as f:
         html = render_template("ARC5-report-layout.html", context)
         f.write(html)
+    print "file save as %s"%fname
 
 def get_dataset_from_CSV(survey_type):
     data = []
     csv_name = "results-%s.csv"%survey_type
-    csv_path = os.path.join(PATH, csv_name)
+    csv_path = os.path.join(RESULTS_PATH, csv_name)
     if not os.path.isfile : raise ValueError("wrong path")
     with open(csv_path,"r") as f:
         reader = csv.DictReader(f)
@@ -104,51 +104,24 @@ def union(a, b):
     """ return the union of two lists """
     return list(set(a) | set(b))
 
+def create_index_html(clean_dataset, title, questions, fname):
 
-if __name__ == "__main__":
-
-    # get raw data as list of dict
-    culture_answers = get_dataset_from_CSV("Culture")
-    recherche_answers = get_dataset_from_CSV("Recherche")
-
-    # CSV keys
-    culture_keys = culture_answers[0].keys()
-    recherche_keys =recherche_answers[0].keys()
-    print "%s culture_keys"%len(culture_keys)
-    print "%s recherche_keys"%len(recherche_keys)
-
-    # u = union(culture_keys, recherche_keys)
-    # print len(u)
-    common_keys = intersect(culture_keys, recherche_keys)
-    print "%s common_keys"%len(common_keys)
-
-
-    # headers
-    raw_headers = get_dataset_from_CSV("headers")
-    headers = {}
-    for key in raw_headers[0].keys():
-        row_id = key.split(".")[0]
-        row_description = key.split(row_id)[1][2:]
-        headers[row_id] = row_description
-    headers_common = [{"name" :key, "description" : headers[key] } for key in headers if key in common_keys]
-    assert len(headers_common) == len(common_keys)
-
-    # clean
-    clean_culture = build_clean_dataset(culture_answers, common_keys, "culture")
-    clean_recherche = build_clean_dataset(recherche_answers, common_keys,"recherche")
-
-    # build a master set
-    clean_dataset = clean_recherche + clean_culture
     print "%s : len of clean dataset "%len(clean_dataset)
+
+    get_headers = questions
 
     # remove empty records
     final_dataset = []
 
     for entry in clean_dataset:
-        if entry["Date[SQ001]"] != "":
-            entry["Date[SQ001]"] = int(float(entry["Date[SQ001]"]))
-        if entry["Date[SQ002]"] != "":
-            entry["Date[SQ002]"] = int(float(entry["Date[SQ002]"]))
+        try :
+            if entry["Date[SQ001]"] != "":
+                entry["Date[SQ001]"] = int(float(entry["Date[SQ001]"]))
+            if entry["Date[SQ002]"] != "":
+                entry["Date[SQ002]"] = int(float(entry["Date[SQ002]"]))
+        except KeyError:
+            # print "no time info"
+            pass
 
         # check number of empty answers
         empty_answers = 0
@@ -163,26 +136,23 @@ if __name__ == "__main__":
 
     # write final results to file
     keys = final_dataset[0].keys()
-    final_path = os.path.join(PATH,'ARC5-survey-final-results.csv')
+    final_path = os.path.join(RESULTS_PATH,'ARC5-survey-final-results.csv')
     save_to_CSV(final_dataset, keys, final_path)
 
     # save header doc
-    final_path = os.path.join(PATH,'ARC5-survey-description.csv')
+    final_path = os.path.join(RESULTS_PATH,'ARC5-survey-description.csv')
     save_to_CSV(headers_common, ["name", "description"], final_path)
 
     # Decode the UTF-8 string to get unicode
     ha =  [ { "name" : row["name"].decode('utf-8') , "description" : row["description"].decode('utf-8') } for row in headers_common]
 
-    get_headers = { row["name"] : row["description"].decode('utf-8')  for row in headers_common  }
-    get_headers["type"] = "Type de questionnaire (Recherche ou Culture)"
 
     # organize by answer
     answers = []
     subquestions = []
 
     #load mapping
-
-    with open(os.path.join(PATH,"chartMapping.json")) as data_file:
+    with open(os.path.join(RESULTS_PATH,"chartMapping.json")) as data_file:
         chart_mapping = json.load(data_file)
 
     def get_results(key):
@@ -269,10 +239,14 @@ if __name__ == "__main__":
                     elif label.startswith("Comment a ".decode("utf-8")):
                         label = get_headers[subkey].split("Comment a été financé ce projet ? ".decode("utf-8"))[1]
                     if subkey != "":
+                        try:
+                            c = count["Oui"]
+                        except KeyError:
+                            c = 0
                         point = {
                             "name" : subkey,
                             "label" : label,
-                            "value" : count["Oui"],
+                            "value" : c,
                             "color" : colorscale("#DF3C3C", .2*i)
                         }
                         chartData.append(point)
@@ -290,6 +264,71 @@ if __name__ == "__main__":
 
     # parse HTML reponsesBrut
     context = {
-        "answers" : answers
+        "answers" : answers,
+        "title" : title,
+        "total_rep" : unicode(len(final_dataset))
     }
-    create_index_html(context)
+
+    create_html_file(context, fname)
+
+def parse_headers(raw_headers):
+    headers = {}
+    for key in raw_headers.keys():
+        row_id = key.split(".")[0]
+        row_description = key.split(row_id)[1][2:]
+        headers[row_id] = row_description
+    return headers
+
+if __name__ == "__main__":
+
+    print "#"*10
+    print "Parse Clean Datasets"
+    # get raw data as list of dict
+    culture_answers = get_dataset_from_CSV("Culture")
+    recherche_answers = get_dataset_from_CSV("Recherche")
+
+    # CSV keys
+    culture_keys = culture_answers[0].keys()
+    recherche_keys =recherche_answers[0].keys()
+    print "%s culture_keys"%len(culture_keys)
+    print "%s recherche_keys"%len(recherche_keys)
+
+    # u = union(culture_keys, recherche_keys)
+    # print len(u)
+    common_keys = intersect(culture_keys, recherche_keys)
+    print "%s common_keys"%len(common_keys)
+
+    # headers
+    raw_headers = get_dataset_from_CSV("headers")
+    headers = parse_headers(raw_headers[0])
+
+    headers_common = [{"name" :key, "description" : headers[key] } for key in headers if key in common_keys]
+    assert len(headers_common) == len(common_keys)
+
+    # clean
+    clean_culture = build_clean_dataset(culture_answers, common_keys, "culture")
+    clean_recherche = build_clean_dataset(recherche_answers, common_keys,"recherche")
+
+    # build a master set
+    clean_merged_dataset = clean_recherche + clean_culture
+
+    questions = { row.decode('utf-8') : headers[row].decode('utf-8')  for row in headers  }
+
+    print "#"*10
+    print "Recherche"
+    questions_culture_headers = get_dataset_from_CSV("culture-headers")
+    # print questions_culture_headers[0]
+    questions_culture = parse_headers(questions_culture_headers[0])
+
+    # print questions_culture
+    create_index_html(clean_culture, "Questionnaire Culture", { row.decode('utf-8') : questions_culture[row].decode('utf-8')  for row in questions_culture  }, "ARC5_resultats_culture.html")
+
+    print "#"*10
+    print "Culture"
+    create_index_html(clean_recherche, "Questionnaire Recherche", questions, "ARC5_resultats_recherche.html")
+
+    # print "#"*10
+    # print "Recherche + Culture"
+    # questions_merged = { row["name"] : row["description"].decode('utf-8')  for row in headers_common  }
+    # questions_merged["type"] = "Type de questionnaire (Recherche ou Culture)"
+    # create_index_html(clean_merged_dataset, "Résulats Recherche+Culture", questions_merged, "ARC5_resultats_total.html")

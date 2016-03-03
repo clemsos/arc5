@@ -4,7 +4,7 @@ arc5.sublime-*
 models
 tests
 
-results
+results*
 
 # Logs
 logs
