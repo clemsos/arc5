@@ -1,6 +1,11 @@
 #!/bin/bash
 
 # parse ARC5 file data
+echo
+echo "#############"
+echo "NETWORK "
+echo "#############"
+echo
 
 echo
 echo "PARSE DATA FROM FILE "
@@ -34,4 +39,14 @@ cd matrix
 . venv/bin/activate
 python matrix.py
 deactivate
+cd ..
+
+echo
+echo "#############"
+echo "QUESTIONNAIRE "
+echo "#############"
+echo
+
+cd reponsesBrut
+python parse.py
 cd ..

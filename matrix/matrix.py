@@ -12,7 +12,7 @@ import pickle
 import os
 
 # results folder
-results_folder = os.path.join(os.getcwd(), "../results")
+results_folder = os.path.join(os.getcwd(), "../results/network")
 
 # create empty (undirected) graph
 G=nx.Graph()
