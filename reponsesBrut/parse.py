@@ -341,4 +341,4 @@ if __name__ == "__main__":
     print "Recherche + Culture"
     questions_merged = { row["name"] : row["description"].decode('utf-8')  for row in headers_common  }
     questions_merged["type"] = "Type de questionnaire (Recherche ou Culture)"
-    create_index_html(clean_merged_dataset, "Résulats Recherche+Culture", questions_merged, "ARC5_resultats_total.html")
+    create_index_html(clean_merged_dataset, "Résulats Recherche+Culture", questions_merged, os.path.join(RESULTS_PATH,"ARC5_resultats_total.html"))
