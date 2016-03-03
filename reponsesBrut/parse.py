@@ -9,11 +9,11 @@ import codecs
 from jinja2 import Environment, FileSystemLoader
 import json
 
-RESULTS_PATH = os.path.dirname(os.path.abspath(__file__))
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 TEMPLATE_ENVIRONMENT = Environment(
     autoescape=False,
-    loader=FileSystemLoader(os.path.join(RESULTS_PATH, 'templates')),
+    loader=FileSystemLoader(os.path.join(PATH, 'templates')),
     trim_blocks=False)
 
 def clamp(val, minimum=0, maximum=255):
@@ -70,7 +70,7 @@ def create_html_file(context, fname):
 def get_dataset_from_CSV(survey_type):
     data = []
     csv_name = "results-%s.csv"%survey_type
-    csv_path = os.path.join(RESULTS_PATH, csv_name)
+    csv_path = os.path.join(PATH, csv_name)
     if not os.path.isfile : raise ValueError("wrong path")
     with open(csv_path,"r") as f:
         reader = csv.DictReader(f)
@@ -134,13 +134,14 @@ def create_index_html(clean_dataset, title, questions, fname):
 
     print "%s : len of final dataset "%len(final_dataset)
 
+
     # write final results to file
     keys = final_dataset[0].keys()
-    final_path = os.path.join(RESULTS_PATH,'ARC5-survey-final-results.csv')
+    final_path = os.path.join(PATH,'ARC5-survey-final-results.csv')
     save_to_CSV(final_dataset, keys, final_path)
 
     # save header doc
-    final_path = os.path.join(RESULTS_PATH,'ARC5-survey-description.csv')
+    final_path = os.path.join(PATH,'ARC5-survey-description.csv')
     save_to_CSV(headers_common, ["name", "description"], final_path)
 
     # Decode the UTF-8 string to get unicode
@@ -152,7 +153,7 @@ def create_index_html(clean_dataset, title, questions, fname):
     subquestions = []
 
     #load mapping
-    with open(os.path.join(RESULTS_PATH,"chartMapping.json")) as data_file:
+    with open(os.path.join(PATH,"chartMapping.json")) as data_file:
         chart_mapping = json.load(data_file)
 
     def get_results(key):
@@ -314,6 +315,10 @@ if __name__ == "__main__":
 
     questions = { row.decode('utf-8') : headers[row].decode('utf-8')  for row in headers  }
 
+    print PATH
+    RESULTS_PATH = os.path.join(PATH, "../results/questionnaires")
+    if not os.path.isdir(RESULTS_PATH) : os.mkdir(RESULTS_PATH)
+
     print "#"*10
     print "Recherche"
     questions_culture_headers = get_dataset_from_CSV("culture-headers")
@@ -321,11 +326,12 @@ if __name__ == "__main__":
     questions_culture = parse_headers(questions_culture_headers[0])
 
     # print questions_culture
-    create_index_html(clean_culture, "Questionnaire Culture", { row.decode('utf-8') : questions_culture[row].decode('utf-8')  for row in questions_culture  }, "ARC5_resultats_culture.html")
+    create_index_html(clean_culture, "Questionnaire Culture", { row.decode('utf-8') : questions_culture[row].decode('utf-8')  for row in questions_culture  },
+    os.path.join(RESULTS_PATH, "ARC5_resultats_culture.html"))
 
     print "#"*10
     print "Culture"
-    create_index_html(clean_recherche, "Questionnaire Recherche", questions, "ARC5_resultats_recherche.html")
+    create_index_html(clean_recherche, "Questionnaire Recherche", questions, os.path.join(RESULTS_PATH, "ARC5_resultats_recherche.html"))
 
     # print "#"*10
     # print "Recherche + Culture"
