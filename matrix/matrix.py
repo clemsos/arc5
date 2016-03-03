@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+    #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import csv
@@ -16,35 +16,39 @@ print
 # create empty (undirected) graph
 G=nx.Graph()
 
+excluded_nodes = ["", "imaginove", "ardi"]
+
+
+print "#"*10
+print "ORIGINAL NETWORK"
+print "-"*10
+
+
 # import edges
 edges_file="../mongoexport/edges.csv"
 with open(edges_file, "r") as f :
     reader = csv.DictReader(f)
     for edge in reader :
-        # print edge
-        G.add_edge(edge["source"], edge["target"], {'type' : edge['type']})
-
-print "#"*10
-print "ORIGINAL NETWORK"
-print "-"*10
-print "%s nodes"%len(G.nodes())
-print "%s edges"%len(G.edges())
+        if edge["source"] not in excluded_nodes and edge["target"] not in excluded_nodes:
+            G.add_edge(edge["source"], edge["target"], {'type' : edge['type']})
 
 # import nodes
 nodes_file="../mongoexport/nodes.csv"
 with open(nodes_file, "r") as f :
     reader = csv.DictReader(f)
     for node in reader :
-        G.add_node(node["slug"], node)
+        if node["slug"] not in excluded_nodes:
+            G.add_node(node["slug"], node)
+        else :
+            print excluded_nodes
 
-print "%s nodes after data was added"%len(G.nodes())
+types = Counter([ g[1]["type"] for g in G.nodes(data=True) ]).keys()
 
+print "%s nodes : %s "%(len(G.nodes()),types)
+print "%s edges"%len(G.edges())
 
 
 ### check for similar nodes
-
-types = Counter([ g[1]["type"] for g in G.nodes(data=True) ]).keys()
-print types
 print
 print "#"*20
 print "DELETE DUPLICATES"
@@ -90,6 +94,7 @@ if not os.path.isfile("raw_similar_words.txt"):
     print "-"*10
     print "%s similar nodes"%len(similars)
 
+
 if not len(matches):
     for i, sim in enumerate(similars):
         print "---------- %s/%s"%(i, len(similars))
@@ -114,7 +119,7 @@ if not len(matches):
 
 print "-"*10
 
-# nodes_to_delete = []
+# duplicates_nodes = []
 
 match_index = { m[0]:m[1] for m in matches }
 match_reverse_index = { m[1]:m[0] for m in matches }
@@ -167,63 +172,83 @@ print "%s unique nodes in %s matching groups"%(len(matched), len(match_series))
 # create clean graph
 clean_G = nx.Graph()
 
-deleted_nodes = []
+duplicates_nodes = []
 clean_names = {}
 
-# define clean names
-for m in match_series:
-    # arbitrary select first item as the good node
-    clean_names[m] = m
-    similar_nodes = list(set(match_series[m]))
-    for node in similar_nodes:
-        clean_names[node] = m
 
-    # store nodes that have been deleted
-    deleted_nodes += similar_nodes
+# remove useless names
+villes = ["grenoble", "lyon", "valence", "brou", "etienne"]
+ville_names = {
+    "grenoble" : "Grenoble",
+    "lyon" : "Lyon",
+    "valence" : "Valence",
+    "brou" : "Bourg-en-Bresse",
+    "etienne" : "St-Etienne"
+    }
 
-print "%s deleted nodes"%len(deleted_nodes)
+for n in G.nodes(data=True):
+    m = n[1]["slug"]
 
-# get only clean nodes
-for m in matched:
-    real_name = clean_names[m]
+    # ignore node of degree zero
+    if G.degree(m) == 0:
+        excluded_nodes.append(m)
 
-    # get a complete list of nodes
-    real_node = G.node[real_name]
-    clean_G.add_node(real_name, real_node) # add clean nodes to the graph
+    #parse city name
+    elif m.startswith("ville-"):
+        for e in G.edges(m):
+            hasVille = [v for v in villes if v in e[1].lower() ] # wild guess of city name from edges info
+        if hasVille :
+            clean_names[m] = hasVille[0] # first city in the list
+            duplicates_nodes.append(m)
+        else :
+            excluded_nodes.append(m)
 
-    # get clean edges
-    matched_edges = [e for e in G.edges(match_series[real_name], data=True)]
-    for e in matched_edges:
-        try:
-            clean_G.add_edge(real_name, clean_names[e[1]], e[2] ) # rename edges properly and add to the graph
-        except KeyError:
-            clean_G.add_edge(real_name, e[1], e[2] ) # rename edges properly and add to the graph
+    # excludes unnamed projects and partenaires
+    elif m.startswith("projet-") or m.startswith("partenaire-"):
+        excluded_nodes.append(m)
 
-# get all nodes except those already cleaned
-clean_nodes = [n for n in G.nodes() if n not in matched and n != ""]
+    # get clean names
+    if m in match_series:
+        # arbitrary select first item as the good node
+        clean_names[m] = m
+        similar_nodes = list(set(match_series[m]))
+        for node in similar_nodes:
+            clean_names[node] = m
 
-# make sure we have all nodes
-assert len(clean_nodes) + len(matched) +1 == len(G.nodes())
+        # store nodes that have been deleted
+        duplicates_nodes += similar_nodes
 
-# print len(clean_nodes)
-for n in clean_nodes:
-    clean_G.add_node(n, G.node[n])
+print "%s deleted nodes"%len(duplicates_nodes)
+
+# parse nodes for the whole graph
+for n in G.nodes():
+    if n not in clean_names.keys() and n not in duplicates_nodes:
+        clean_names[n] = n
+
+# get only clean nodes and edges
+for n in G.nodes(data=True):
+    if n not in excluded_nodes:
+        real_name = clean_names[n[0]]
+        data = n[1]
+        if real_name in villes :
+            data["name"]= ville_names[real_name]
+        clean_G.add_node(real_name, data) # add clean nodes to the graph
 
 
-# get all edges from clean nodes
-clean_edges = [e for e in G.edges(clean_nodes) if e[0] not in deleted_nodes and e[1] not in deleted_nodes ]
-for e in clean_edges:
-    clean_G.add_edge( e[0], e[1], G.edge[e[0]][e[1]] )
+for e in G.edges(data=True):
+    if e[0] not in excluded_nodes and e[1] not in excluded_nodes:
+        source = clean_names[e[0]]
+        target = clean_names[e[1]]
+        clean_G.add_edge(source, target, e[2] ) # rename edges properly and add to the graph
 
 # make sure that no deleted node is present in the final graph
-assert len(set.intersection(set(clean_G.nodes()), set(deleted_nodes))) == 0
+assert len(set.intersection(set(clean_G.nodes()), set(duplicates_nodes))) == 0
 
 print "-"*10
 print "%s nodes merged"%(len(G.nodes())-len(clean_G.nodes()))
 print "%s edges merged"%(len(G.edges())-len(clean_G.edges()))
 print "%s nodes after fix duplicate"%len(clean_G.nodes())
 print "%s edges after fix duplicate"%len(clean_G.edges())
-
 
 #### convert persons to edges
 print
@@ -259,7 +284,7 @@ for person in persons:
         # create new edges between all those
         new_edges = list(itertools.combinations(clean_nodes, 2))
         for e in new_edges:
-            clean_G.add_edge( e[0], e[1], data )
+            clean_G.add_edge( e[0], e[1], {"type" : "personne"} )
 
     # remove person from the graph
     clean_G.remove_node(person)
@@ -271,7 +296,6 @@ print "%s nodes after conversion of person from nodes to edges"%len(clean_G.node
 print "%s edges after conversion of person from nodes to edges"%len(clean_G.edges())
 
 
-
 print
 print "#"*10
 print "SAVE CLEAN VERSIONS"
@@ -281,15 +305,17 @@ print
 print Counter([n[2]["type"] for n in clean_G.edges(data=True)]).keys()
 
 clean_edge_types = {
-    'ville' : "travaille dans la ville de",
-    'ecole-doctorale' : "héberge le doctorant",
-    'etablissement' : "pilote le projet",
-    'personne' : "ont des membres communs avec",
-    'etablissements_gestionnaires' : "gère le projet",
+    'ville' : "dans la ville de " ,
+    'doctorant' : "en thèse",
+    'personne' : "membre communs du projet",
+    'laboratoire' : "hebergé par le laboratoire",
+    'etablissement' : "gère",
+    'etablissements_gestionnaires' : "gère",
     'projet' : "est partenaire de",
     'partenaire' : "est partenaire de",
-    'laboratoire' : "héberge"
+    'ecole-doctorale' : "fait sa thèse à"
 }
+
 
 ## save graph to a CSV file
 with open('ARC5_final_edges.csv', 'wb') as metrics_file:
