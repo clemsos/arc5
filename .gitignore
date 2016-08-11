@@ -6,6 +6,10 @@ tests
 
 results*
 
+
+wp-api-crawler/arc7.js
+*.zip
+
 # Logs
 logs
 *.log
