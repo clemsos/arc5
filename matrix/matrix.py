@@ -254,6 +254,52 @@ print "%s edges merged"%(len(G.edges())-len(clean_G.edges()))
 print "%s nodes after fix duplicate"%len(clean_G.nodes())
 print "%s edges after fix duplicate"%len(clean_G.edges())
 
+
+with open(os.path.join(results_folder,'ARC5_merged_nodes_with_names.csv'), 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["id", "name", "type", "start", "end", "axe"])
+    for n in clean_G.nodes(data=True):
+        data = n[1]
+        row = [n[0], data["name"], data["type"], data["start"], data["end"], data["axe.id"]]
+        wr.writerow(row)
+print "nodes saved as ARC5_merged_nodes_with_names.csv"
+
+## save graph to a CSV file
+with open(os.path.join(results_folder,'ARC5_merged_edges_with_names.csv'), 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["source", "target", "type"])
+    for n in clean_G.edges(data=True):
+        data = n[2]
+        row = [n[0], n[1], data["type"]]
+        wr.writerow(row)
+print "nodes saved as ARC5_merged_nodes_with_names.csv"
+
+
+### some metrics
+
+nodes_projects = [node[0] for node in clean_G.nodes(data=True) if node[1]["type"] == "projet"  or node[1]["type"] == "project"]
+
+nodes_theses = [node[0] for node in clean_G.nodes(data=True) if node[1]["type"] == "these"]
+
+count_partenaires_par_projet = []
+for p in nodes_projects:
+    print p
+    adjacent_nodes_types = [ clean_G.node[n[1]]["type"] for n in clean_G.edges(p)]
+    print Counter(adjacent_nodes_types)["partenaire "]
+    count_partenaires_par_projet.append(Counter(adjacent_nodes_types)["partenaire"])
+
+print Counter(count_partenaires_par_projet)
+
+print nodes_theses
+count_persons_par_these = []
+for p in nodes_theses:
+    print p
+    adjacent_nodes_types = [ clean_G.node[n[1]]["type"] for n in clean_G.edges(p)]
+    print Counter(adjacent_nodes_types)["personne"]
+    count_persons_par_these.append(Counter(adjacent_nodes_types)["personne"])
+
+print Counter(count_persons_par_these)
+
 #### convert persons to edges
 print
 print "#"*20
@@ -326,11 +372,12 @@ clean_edge_types = {
     'etablissements_gestionnaires' : "gère",
     'projet' : "travaille avec",
     'partenaire' : "est partenaire de",
-    'ecole-doctorale' : "fait sa thèse à"
+    'ecole-doctorale' : "fait sa thèse à",
+    "common_projects" : "ont des projets ou thèses communes"
 }
 
 ## save graph to a CSV file
-with open(os.path.join(results_folder,'ARC5_final_edges.csv'), 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_anonymous_edges.csv'), 'wb') as metrics_file:
     wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
     wr.writerow(["source", "target", "type", "name"])
     for n in clean_G.edges(data=True):
@@ -338,16 +385,16 @@ with open(os.path.join(results_folder,'ARC5_final_edges.csv'), 'wb') as metrics_
         row = [n[0], n[1], data["type"], clean_edge_types[data["type"]] ]
         wr.writerow(row)
 
-print "edges saved as ARC5_final_edges.csv"
+print "edges saved as ARC5_anonymous_edges.csv"
 
-with open(os.path.join(results_folder,'ARC5_final_nodes.csv'), 'wb') as metrics_file:
+with open(os.path.join(results_folder,'ARC5_anonymous_nodes.csv'), 'wb') as metrics_file:
     wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
     wr.writerow(["id", "name", "type", "start", "end", "axe"])
     for n in clean_G.nodes(data=True):
         data = n[1]
         row = [n[0], data["name"], data["type"], data["start"], data["end"], data["axe.id"]]
         wr.writerow(row)
-print "nodes saved as ARC5_final_nodes.csv"
+print "nodes saved as ARC5_anonymous_nodes.csv"
 
 
 print
@@ -378,3 +425,64 @@ with open(os.path.join(results_folder,'ARC5_human_readable.txt'), 'wb') as metri
     for n in clean_G.edges(data=True):
         line =  "'%s' %s '%s' \n\n"%(clean_G.node[n[1]]["name"], clean_edge_types[data["type"]], clean_G.node[n[0]]["name"])
         metrics_file.write(line)
+
+
+#### convert project to edges
+print
+print "#"*20
+print "CONVERT PROJECT+THESES TO EDGES"
+
+projects_theses = [node[0] for node in clean_G.nodes(data=True) if node[1]["type"] == "projet" or node[1]["type"] == "these" or node[1]["type"] == "project" ]
+persons_edges = clean_G.edges(projects_theses)
+print "%s persons linked to %s edges"%(len(projects_theses), len(persons_edges))
+
+
+for person in projects_theses:
+
+    # edges for a single person
+    person_edges = clean_G.edges(person)
+    # print "%s : %s edges "%(person, len(person_edges))
+
+    # get all nodes linked by a single person
+    list_of_person_nodes = []; map(list_of_person_nodes.extend, map(list,person_edges))
+    assert len(list_of_person_nodes) == len(person_edges)*2 # make sure we have all nodes
+
+    clean_nodes = [n for n in list_of_person_nodes if n != person]
+    assert len(clean_nodes) == len(person_edges) # make sure we have all new nodes, except the person
+
+    if len(person_edges) > 2 : # if have less than degree of 1 then remove node
+
+        # get data to add to the edge
+        data = clean_G.node[person]
+
+        # create new edges between all those
+        new_edges = list(itertools.combinations(clean_nodes, 2))
+        for e in new_edges:
+            clean_G.add_edge( e[0], e[1], {"type" : "common_projects", "name": "%s : %s"%(data["type"],data["name"])} )
+
+    # remove person from the graph
+    clean_G.remove_node(person)
+
+## save graph to a CSV file
+with open(os.path.join(results_folder,'ARC5_no_project_edges.csv'), 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["source", "target", "type", "name"])
+    for n in clean_G.edges(data=True):
+        data = n[2]
+        try :
+            name = data["name"]
+        except KeyError:
+            name = data["type"]
+        row = [n[0], n[1], data["type"], name ]
+        wr.writerow(row)
+
+print "edges saved as ARC5_no_project_edges.csv"
+
+with open(os.path.join(results_folder,'ARC5_no_project_nodes.csv'), 'wb') as metrics_file:
+    wr = csv.writer(metrics_file, quoting=csv.QUOTE_ALL)
+    wr.writerow(["id", "name", "type", "start", "end", "axe"])
+    for n in clean_G.nodes(data=True):
+        data = n[1]
+        row = [n[0], data["name"], data["type"], data["start"], data["end"], data["axe.id"]]
+        wr.writerow(row)
+print "nodes saved as ARC5_no_project_nodes.csv"

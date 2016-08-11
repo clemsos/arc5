@@ -20,13 +20,13 @@ bdd_ecole-doctorale
 */
 
 var arcsURL = "http://arcs.test/wp-json"
-var ARC_NUMBER = "arc5";
+var ARC_NUMBER = "arc7";
 
 
 // get posts
 var getItems = function (type, callback) {
     if (typeof  (type) != "string") throw new Error("Word should be a string");
-    
+
     // URL query
     var params = {};
     params.type = type;
@@ -43,7 +43,7 @@ var getItems = function (type, callback) {
 
 function getSingleItem(id, callback){
     // if (typeof  (type) != "string") throw new Error("Word should be a string");
-    
+
     // URL query
     var params = {};
 
@@ -78,7 +78,7 @@ function getAllItems(type, callback) {
 function searchItem (q, type, callback) {
     if (typeof  (type) != "string") throw new Error("Word should be a string");
     if (typeof  (q) != "string") throw new Error("Word should be a string");
-    
+
     // URL query
     var params = {};
     params.type = "bdd_"+type;
