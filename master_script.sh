@@ -7,6 +7,10 @@ echo "NETWORK "
 echo "#############"
 echo
 
+echo 'reset database...'
+mongo arc5 -eval 'db.edges.drop()'
+mongo arc5 -eval 'db.nodes.drop()'
+
 echo
 echo "PARSE DATA FROM FILE "
 echo "#############"
@@ -41,12 +45,12 @@ python matrix.py
 deactivate
 cd ..
 
-echo
-echo "#############"
-echo "QUESTIONNAIRE "
-echo "#############"
-echo
-
-cd reponsesBrut
-python parse.py
-cd ..
+# echo
+# echo "#############"
+# echo "QUESTIONNAIRE "
+# echo "#############"
+# echo
+#
+# cd reponsesBrut
+# python parse.py
+# cd ..

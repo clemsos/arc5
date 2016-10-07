@@ -30,8 +30,8 @@ function getEdge (source, target, type, start, end) {
             'type' : type
         }
 
-    if(start) edge.start = moment( start , "YYYYMMDD").toString();
-    if(end)  edge.end = moment( end , "YYYYMMDD").toString();
+    if(start) edge.start = start //moment( start , "YYYYMMDD").toString();
+    if(end)  edge.end = end //moment( end , "YYYYMMDD").toString();
 
     return edge
 }
@@ -123,6 +123,9 @@ function parseNode(item) {
 
         node.bddLink = item.link || "";
 
+        node.start =  item.start // moment(item.start, "YYYYMMDD").toJSON();
+        node.end = item.end // moment(item.end, "YYYYMMDD").toJSON();
+
         // if(node.type == "partenaire") console.log(item);
 
         // parse date, axe
@@ -132,10 +135,6 @@ function parseNode(item) {
             node.name = item.title || node.type + "-" +Math.floor(Math.random()*100000);
             node.acronyme = item.meta.acronyme || node.name.match(/\b(\w)/g).join('').toUpperCase();
             node.site = item.meta.site;
-
-            node.start =  moment(item.meta["date_debut"], "YYYYMMDD").toJSON();
-            node.end = moment(item.meta["date_fin"], "YYYYMMDD").toJSON();
-
             // axe
             if (item.terms && item.terms.bdd_thematique_arc5) node.axe =  getAxe(item.terms.bdd_thematique_arc5[0].ID);
             else node.axe =  getAxe(item.axe);

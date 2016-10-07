@@ -14,46 +14,54 @@ var nodesFiles = ["ecole-doctorales" , "etablissements" , "laboratoires" , "pers
 var wpIndex = ["bdd_these", "bdd_projet"];
 
 // keep track of progresses
-var totalIndexes = nodesFiles.length + wpIndex.length;
+var totalIndexes = nodesFiles.length //+ wpIndex.length;
 
 // loop through all JSON files
+var isProjet = true;
 for (var i = 0; i < nodesFiles.length; i++) {
-    file.readJsonFromFile("data/json/"+nodesFiles[i]+".json", function(items) {
+    file.readJsonFromFile("../arc5-parser/data/json/"+nodesFiles[i]+".json", function(items) {
         console.log(items.length, " items in ",  items[0].type+"s");
-        saveEdgesAndNodes(items)
+        if (items[0].type == "projet" || items[0].type == "postdoc" || items[0].type == "these") isProjet = true
+        else isProjet = false
+        console.log(isProjet);
+
+        saveEdgesAndNodes(items, isProjet)
     })
 }
 
 // loop through all JSON WP indexes
-for (var i = 0; i < wpIndex.length; i++) {
-    api.getAllItems(wpIndex[i], function(items){
-        saveEdgesAndNodes(items);
-    });
-}
+// for (var i = 0; i < wpIndex.length; i++) {
+//   // console.log(i);
+//     api.getAllItems(wpIndex[i], function(items){
+//       // console.log(items);
+//       console.log(items.length, " items in ",  items[0].type+"s");
+//         saveEdgesAndNodes(items);
+//     });
+// }
 
 
 
 var loops = 0;
-function saveEdgesAndNodes (items, edgesBatch, nodesBatch) {
+function saveEdgesAndNodes (items,isProjet) {
 
     // count function calls to keep track of progresses
     loops++;
 
     for (var z = 0; z < items.length; z++) {
         var item = items[z];
-
         if(item) {
 
             // save node
             var node = parser.parseNode(item);
+            // if( node.type == "projet" || node.type == "these" || node.type == "postdoc" && isProjet)
             methods.insertOrUpdateNode(node);
 
             // create edges and target nodes
             parser.parseRelationships(item, function (edges) {
                 for (var j = 0; j < edges.length; j++) {
-                    methods.insertOrUpdateEdge(edges[j]);
+                    methods.insertOrUpdateEdge(edges[j], isProjet);
                 }
-
+                // console.log(totalIndexes,loops);
                 if(totalIndexes == loops &&  z+1 == items.length) {
                     console.log("indexing done");
                     methods.execute()

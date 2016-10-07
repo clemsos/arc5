@@ -5,6 +5,12 @@ models
 tests
 
 results*
+final
+
+.ipynb_checkpoints/
+notebooks/env/
+notebooks/matches.txt
+notebooks/raw_similar_words.txt
 
 
 wp-api-crawler/arc7.js
